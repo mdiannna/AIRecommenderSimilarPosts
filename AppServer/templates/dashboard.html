@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href={{ url_for('static', filename='css/theme1.css') }}>
 
     <!-- TODO: make separate file -->
     <style>
@@ -117,12 +118,17 @@
         td {
             text-align: center;
         }
+
+        .table-success {
+          font-weight: bold;
+          
+        }
     </style>
   </head>
 
   <body>
-    <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0">
-      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Similarity Recommender</a>
+    <nav class="navbar navbar-dark sticky-top bg-primary flex-md-nowrap p-0">
+      <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Similarity Recommender Home</a>
       <!-- <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search"> -->
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
@@ -137,25 +143,27 @@
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a class="nav-link active" href="#">
+                <a class="nav-link active text-primary" href="#">
                   <span data-feather="home"></span>
                   Dashboard <span class="sr-only">(current)</span>
                 </a>
               </li>
               
+              <hr >
               <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="users"></span>
-                  Users (admins)
+                  Profile settings
                 </a>
               </li>
-              <li class="nav-item">
+              <!-- Nice to have feature for later -->
+              <!-- <li class="nav-item">
                 <a class="nav-link" href="#">
                   <span data-feather="bar-chart-2"></span>
                   Reports
                 </a>
               </li>
-              
+               -->
               <li class="nav-item">
                 <a class="nav-link" href="#">
                     <span data-feather="file-text"></span>
@@ -185,7 +193,7 @@
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="#">
-                  <span data-feather="file-text"></span>
+                  <span data-feather="image"></span>
                   Images feature extraction
                 </a>
               </li>
@@ -214,12 +222,15 @@
           <!-- <canvas class="my-4" id="myChart" width="900" height="380"></canvas> -->
 
           
-          <span class="float-left"><h2>Manage models for <em><b>NER</b></em></h2></span>
+          <h1>Welcome, user!</h1>
+
+          <hr>
+          <span class="float-left"><h2> <i class="fa fa-file-text-o"> </i>  Manage models for <b>NER (Named Entity Recognition)</b></h2></span>
           <!-- <span class="float-right"><a href="" class="btn btn-primary">Upload new NER model...</a></span> -->
 
           <div>
           <div class="table-responsive mt-3">
-            <table class="table table-striped table-sm">
+            <table class="table table table-sm">
               <thead>
                 <tr>
                   <th>#</th>
@@ -234,30 +245,30 @@
               <tbody>
                 <tr class="table-success">
                   <td>1</td>
-                  <td><a href="" class="btn btn-success">Select</a></td>
+                  <td> <i class="fa fa-check"> </i> Selected</td>
                   <td>Model 1 test</td>
                   <td>12/02/20</td>
                   <td>-</td>
                   <td>
-                    <a href="" class="btn btn-outline-info">
+                    <a href="" class="btn btn-secondary">
                         <i class="fa fa-upload"></i> Upload
                     </a>
-                    <a href="" class="btn btn-info">
+                    <a href="" class="btn btn-secondary">
                         <i class="fa fa-eye"></i> View
                     </a>
                   </td>
                   <td>
-                      <a href="" class="btn btn-danger"><i class="fa fa-trash"></i>
-                    Delete</a>
+                    <a href="" class="btn btn-outline-danger"><i class="fa fa-trash"></i>
+                      Delete</a>
                   </td>
                 </tr>
                   <td>2</td>
-                  <td><a href="" class="btn btn-success">Select</a></td>
+                  <td><a href="" class="btn btn-outline-dark">Select</a></td>
                   <td>Model 2 test</td>
                   <td>12/02/20</td>
                   <td>89%</td>
                   <td>
-                    <a href="" class="btn btn-outline-info">
+                    <a href="" class="btn btn-info">
                         <i class="fa fa-upload"></i> Upload
                     </a>
                     <a href="" class="btn btn-info">
@@ -265,24 +276,24 @@
                     </a>
                   </td>
                   <td>
-                      <a href="" class="btn btn-danger"><i class="fa fa-trash"></i>
-                    Delete</a>
+                    <a href="" class="btn btn-outline-danger"><i class="fa fa-trash"></i>
+                      Delete</a>
                   </td>
                   </tr>
               </tbody>
             </table>
-            <a href="" class="btn btn-primary">Upload new NER model...</a>
+            <a href="" class="btn btn-info"><i class="fa fa-plus"> </i> Upload new NER model...</a>
             </div>
 
             <hr>
 
             <div class="mt-4">
-            <span class="float-left"><h2>Manage models for <em><b>Image</b></em> features</h2></span>
+            <span class="float-left"><h2> <i class="fa fa-image"> </i>  Manage models for <b>Image features</b></h2></span>
             <!-- <span class="float-right"><a href="" class="btn btn-primary">Upload new Image model...</a></span> -->
   
   
             <div class="table-responsive mt-3">
-              <table class="table table-striped table-sm">
+              <table class="table table table-sm">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -297,12 +308,12 @@
                 <tbody>
                   <tr>
                     <td>1</td>
-                    <td><a href="" class="btn btn-success">Select</a></td>
+                    <td><a href="" class="btn btn-outline-dark">Select</a></td>
                     <td>Model 1 test</td>
                     <td>12/02/20</td>
                     <td>-</td>
                     <td>
-                        <a href="" class="btn btn-outline-info">
+                        <a href="" class="btn btn-info">
                             <i class="fa fa-upload"></i> Upload
                         </a>
                         <a href="" class="btn btn-info">
@@ -310,37 +321,37 @@
                         </a>
                       </td>
                       <td>
-                          <a href="" class="btn btn-danger"><i class="fa fa-trash"></i>
+                          <a href="" class="btn btn-outline-danger"><i class="fa fa-trash"></i>
                         Delete</a>
                       </td>  
                   </tr>
                   <tr class="table-success">
                     <td>2</td>
-                    <td><a href="" class="btn btn-success">Select</a></td>
+                    <td> <i class="fa fa-check"> </i> Selected</td>
                     <td>Model 2 test</td>
                     <td>12/02/20</td>
                     <td>89%</td>
                     <td>
-                        <a href="" class="btn btn-outline-info">
+                        <a href="" class="btn btn-secondary">
                             <i class="fa fa-upload"></i> Upload
                         </a>
-                        <a href="" class="btn btn-info">
+                        <a href="" class="btn btn-secondary">
                             <i class="fa fa-eye"></i> View
                         </a>
                       </td>
                       <td>
-                          <a href="" class="btn btn-danger"><i class="fa fa-trash"></i>
-                        Delete</a>
+                        <a href="" class="btn btn-outline-danger"><i class="fa fa-trash"></i>
+                          Delete</a>
                       </td>
                   </tr>
                   </tr>
                     <td>2</td>
-                    <td><a href="" class="btn btn-success">Select</a></td>
+                    <td><a href="" class="btn btn-outline-dark">Select</a></td>
                     <td>Model 3 test</td>
                     <td>12/02/20</td>
                     <td>82%</td>
                     <td>
-                        <a href="" class="btn btn-outline-info">
+                        <a href="" class="btn btn-info">
                             <i class="fa fa-upload"></i> Upload
                         </a>
                         <a href="" class="btn btn-info">
@@ -348,14 +359,14 @@
                         </a>
                       </td>
                       <td>
-                          <a href="" class="btn btn-danger"><i class="fa fa-trash"></i>
-                        Delete</a>
+                        <a href="" class="btn btn-outline-danger"><i class="fa fa-trash"></i>
+                          Delete</a>
                       </td>
                   </tr>
 
             </tbody>
               </table>
-              <a href="" class="btn btn-primary">Upload new Image model...</a>
+              <a href="" class="btn btn-info"><i class="fa fa-plus"> </i> Upload new Image model...</a>
             </div>
   
           </div>

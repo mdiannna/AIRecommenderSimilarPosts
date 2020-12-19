@@ -20,6 +20,12 @@ similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
+app.static('/static', './static')
+# app.static('/static/css', './static/css')
+# app.static('/static/js', './static/js')
+
+print(colored("static", "red"))
+print(app.url_for('static', name='static', filename='css/theme.css'))
 
 # @app.middleware("request")
 # async def add_session_to_request(request):
@@ -42,24 +48,40 @@ async def index(request):
 
 @app.route('/json-hello')
 async def index_json(request):
+    """ route for testing, returns a json response"""
     return response.json("Hello!")
 
 
-@app.route('/make-post', methods=['POST'])
-async def make_post(request):
-    return response.json("TODO: make post and save to db")
+@app.route('/documentation')
+async def documentation(request):
+    return jinja.render("documentation.html", request)
 
 
 # Method for testing get similar posts
-@app.route('/get-similar-posts', methods=['GET'])
-async def get_similar_posts(request):
-    return jinja.render("get_similar_posts_UI.html", request, greetings="Hello, sanic!")
+@app.route('/demo-similar-posts', methods=['GET'])
+async def demo_similar_posts(request):
+    return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!")
+
+# Method for testing get similar images
+@app.route('/demo-similar-images', methods=['GET'])
+async def demo_similar_images(request):
+    return jinja.render("demo_similar_images.html", request)
+
+# Method for testing Named Entity Recognition (NER)
+@app.route('/demo-ner', methods=['GET'])
+async def demo_ner(request):
+    return jinja.render("demo_ner.html", request)
 
 
 # TODO
 @app.route('/dashboard', methods=['GET'])
 async def dashboard(request):
     return jinja.render("dashboard.html", request)
+
+
+@app.route('/make-post', methods=['POST'])
+async def make_post(request):
+    return response.json("TODO: make post and save to db")
 
 
 # TODO: verificat daca nu trebuie sa fie sincrona! si daca nu trebuie post!
