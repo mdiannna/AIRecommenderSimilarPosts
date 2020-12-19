@@ -21,7 +21,6 @@ similarity = SimilarityAggregator()
 # change to false in production!
 app.config['DEBUG'] = True
 
-
 # @app.middleware("request")
 # async def add_session_to_request(request):
 #     # before each request initialize a session
@@ -55,6 +54,7 @@ async def make_post(request):
 @app.route('/get-similar-posts', methods=['GET'])
 async def get_similar_posts(request):
     return jinja.render("get_similar_posts_UI.html", request, greetings="Hello, sanic!")
+
 
 # TODO
 @app.route('/dashboard', methods=['GET'])
@@ -96,7 +96,6 @@ async def request_similar_posts(request):
         return abort(500, str(e))
 
     return response.json("TODO: make post and save to db")
-
 
 
 if __name__ == '__main__':

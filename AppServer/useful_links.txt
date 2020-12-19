@@ -6,3 +6,7 @@ https://github.com/lixxu/sanic-jinja2
 
 tutorials sanic:
 http://blog.perwagnernielsen.dk/sanic_web_tutorial_part_2_templates.html
+https://medium.com/@pyk/a-guide-to-instrument-sanic-application-part-1-193b3eb403a
+
+bootstrap image preview:
+https://jsfiddle.net/bootstrapious/8w7a50n2	
