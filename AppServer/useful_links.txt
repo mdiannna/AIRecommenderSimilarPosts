@@ -1,0 +1,8 @@
+docstrings: 
+https://www.python.org/dev/peps/pep-0257/
+properties, setters:
+https://www.python-course.eu/python3_properties.php
+https://github.com/lixxu/sanic-jinja2
+
+tutorials sanic:
+http://blog.perwagnernielsen.dk/sanic_web_tutorial_part_2_templates.html
