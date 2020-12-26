@@ -11,7 +11,18 @@ from termcolor import colored
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
 
+# https://sanic-auth.readthedocs.io/en/latest/
+from sanic_auth import Auth
+
 app = Sanic(__name__)
+app.config.AUTH_LOGIN_ENDPOINT = 'login'
+
+
+# @app.middleware('request')
+# async def add_session_to_request(request):
+#     # setup session
+
+auth = Auth(app)
 
 jinja = SanicJinja2(app, autoescape=True)
 session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
@@ -47,11 +58,38 @@ async def index(request):
     return jinja.render("index.html", request)
 
 
+
 @app.route('/json-hello')
 async def index_json(request):
     """ route for testing, returns a json response"""
     return response.json("Hello!")
 
+@app.route('/login', methods=['GET', 'POST'])
+async def login(request):
+    message = ''
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # fetch user from database
+        user = some_datastore.get(name=username)
+        if user and user.check_password(password):
+            auth.login_user(request, user)
+            return response.redirect('/profile')
+    # return response.html(HTML_LOGIN_FORM)
+    return jinja.render("login.html", request)
+
+
+@app.route('/logout')
+@auth.login_required
+async def logout(request):
+    auth.logout_user(request)
+    return response.redirect('/login')
+
+
+@app.route('/profile')
+@auth.login_required(user_keyword='user')
+async def profile(request, user):
+    return response.json({'user': user})
 
 @app.route('/documentation')
 async def documentation(request):
