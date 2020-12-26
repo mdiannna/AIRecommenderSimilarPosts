@@ -28,7 +28,6 @@ app.config.update(settings)
 
 BaseModel.init_app(app)
 
-
 auth = Auth(app)
 
 jinja = SanicJinja2(app, autoescape=True)
@@ -38,10 +37,8 @@ similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
-# app.static('/static', './static')
+
 app.static('/static', './static')
-# app.static('/static/css', './static/css')
-# app.static('/static/js', './static/js')
 
 # for debug of static files folder:
 # print(colored("static", "red"))
@@ -140,8 +137,7 @@ async def profile(request, user):
 
     print(colored(user, "red"))
 
-    return response.json("Hello, " + user.name)
-    # return response.json({'user': user})
+    return jinja.render("profile.html", request, user=user.name)
 
 @app.route('/documentation')
 async def documentation(request):

@@ -1,0 +1,53 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Dashboard - profile settings{% endblock %}
+
+{% block content %}
+          <!-- <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 "> -->
+          <!-- <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom"> -->
+
+            <!-- <h1 class="h2">Dashboard</h1> -->
+            
+            <!-- <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <button class="btn btn-sm btn-outline-secondary">Share</button>
+                <button class="btn btn-sm btn-outline-secondary">Export</button>
+              </div>
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                <span data-feather="calendar"></span>
+                This week
+              </button>
+            </div> -->
+          <!-- </div> -->
+
+          <!-- <canvas class="my-4" id="myChart" width="900" height="380"></canvas> -->
+
+          
+          <h1>Profile administration for user {{user}}</h1>
+
+          <hr>
+
+          <div class="row mx-auto">
+            <div class="col-md-6">
+          <form action="" class="form" method="POST">
+            <h3>Change password:  </h3>
+            <div class="input-group p-3">
+                <label for="old_password">Old password: &nbsp; </label>
+                <input type="password" class="form-control" name="old_password">
+            </div>
+            <div class="input-group p-3">
+              <label for="password"> New Password: &nbsp; </label>
+              <input type="password" class="form-control" name="password">
+          </div>
+            <div class="input-group p-3">
+                <label for="confirm_password"> Re-type password: &nbsp; </label>
+                <input type="password" class="form-control" name="confirm_password">
+            </div>
+    
+            <button type="button" class="btn btn-danger" onclick="">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update </button>
+
+        </form>
+      </div>
+    </div>
+        {% endblock%}
