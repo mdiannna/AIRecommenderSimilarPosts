@@ -13,14 +13,21 @@ from sanic_session import InMemorySessionInterface
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
+from sanic_motor import BaseModel
+from models import User
+from utils import check_password, create_hash
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
 
+# settings = dict(MOTOR_URI='mongodb://db-mongo:27018/service2-mongo-students',
+#                 LOGO=None)
+settings = dict(MOTOR_URI='mongodb://localhost:27017/service2-mongo-students',
+                LOGO=None)
+app.config.update(settings)
 
-# @app.middleware('request')
-# async def add_session_to_request(request):
-#     # setup session
+BaseModel.init_app(app)
+
 
 auth = Auth(app)
 
@@ -36,8 +43,18 @@ app.static('/static', './static')
 # app.static('/static/css', './static/css')
 # app.static('/static/js', './static/js')
 
-print(colored("static", "red"))
-print(app.url_for('static', name='static', filename='css/theme1.css'))
+# for debug of static files folder:
+# print(colored("static", "red"))
+# print(app.url_for('static', name='static', filename='css/theme1.css'))
+
+
+# NOTE
+# For demonstration purpose, we use a mock-up globally-shared session object.
+session = {}
+
+@app.middleware('request')
+async def add_session(request):
+    request.ctx.session = session
 
 # @app.middleware("request")
 # async def add_session_to_request(request):
@@ -71,12 +88,43 @@ async def login(request):
         username = request.form.get('username')
         password = request.form.get('password')
         # fetch user from database
-        user = some_datastore.get(name=username)
-        if user and user.check_password(password):
+        user = await User.find_one({"name":username})
+
+        print("user:", user)
+        # user = some_datastore.get(name=username)
+        if user and check_password(user.password, password):
             auth.login_user(request, user)
-            return response.redirect('/profile')
+            # return response.redirect('/profile')
+            return response.redirect('/dashboard')
+
     # return response.html(HTML_LOGIN_FORM)
     return jinja.render("login.html", request)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+async def register(request):
+    message = ''
+    if request.method == 'POST':
+        username = str(request.form.get('username'))
+        password = str(request.form.get('password'))
+        confirm_password = request.form.get('confirm_password')
+
+        print("username:", username)
+        print("password:", password)
+        print("confirm_passwrod:", confirm_password)
+        # fetch user from database
+        # user = await User.find_one({"name":username})
+
+        print(dict(name=username, password=password))
+
+        if password==confirm_password:
+            await User.insert_one(dict(name=str(username), password=create_hash(password)))
+
+            # TODO: if user inserted ... etc...
+            return response.redirect('/dashboard')
+
+    # return response.html(HTML_LOGIN_FORM)
+    return jinja.render("register.html", request)
 
 
 @app.route('/logout')
@@ -89,7 +137,11 @@ async def logout(request):
 @app.route('/profile')
 @auth.login_required(user_keyword='user')
 async def profile(request, user):
-    return response.json({'user': user})
+
+    print(colored(user, "red"))
+
+    return response.json("Hello, " + user.name)
+    # return response.json({'user': user})
 
 @app.route('/documentation')
 async def documentation(request):
@@ -119,16 +171,19 @@ async def ner_annotator(request):
 
 # TODO
 @app.route('/dashboard', methods=['GET'])
-async def dashboard(request):
-    return jinja.render("dashboard.html", request)
+@auth.login_required(user_keyword='user')
+async def dashboard(request, user):
+    return jinja.render("dashboard.html", request, user=user.name)
 
 
+# TODO: need to be authorized from API
 @app.route('/make-post', methods=['POST'])
 async def make_post(request):
     return response.json("TODO: make post and save to db")
 
 
 # TODO: verificat daca nu trebuie sa fie sincrona! si daca nu trebuie post!
+# TODO: need to be authorized from API
 @app.route('/request-similar-posts', methods=['POST'])
 async def request_similar_posts(request):
     """ 
