@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}SimilarityRecommender Home{% endblock %}
+
+{% block body %}
+
+<div class=" my-auto container-fluid mt-2 mb-2 ">
+    <h1 class="ui header pb-1">NER word annotator</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            
+            <div class="form-group">
+                <!-- <textarea name='text' id="textarea" class="form-control fill-page-vertical">{{text}}</textarea> -->
+                <textarea name='text' id="textarea" class="form-control fill-page-vertical" placeholder="Insert your text here..."></textarea>
+
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <button class="btn btn-primary btn-lg">Auto</button>
+                    <button class="btn btn-dark btn-lg">Verify</button>
+                    <button class="btn btn-danger btn-lg" data-toggle="modal" data-target="#saveModal" id="saveOpenModal">
+                        Save
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="saveModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Save annotation...</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="filename">Choose filename</label>
+                            <input type="text" name="filename" id="filename" class="form-control">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="saveStaticDataToFile()">Save changes</button>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="row pt-3">
+                    <button class="btn btn-secondary m-1 tagButton">Telefon</button>
+                    <button class="btn btn-secondary m-1 tagButton">Locaţie</button>
+                    <button class="btn btn-secondary m-1 tagButton">Rasă</button>
+                    <button class="btn btn-secondary m-1 tagButton">Culoare</button>
+                    <button class="btn btn-secondary m-1 tagButton">Recompensa</button>
+                    <button class="btn btn-secondary m-1 tagButton">Varsta</button>
+                    <button class="btn btn-secondary m-1 tagButton">Nume</button>
+                    <button class="btn btn-secondary m-1 tagButton">Zgarda</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div id="output">
+
+    </div>
+    
+    
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src={{ url_for('static', filename='js/FileSaver.min.js') }}></script>
+<script src={{ url_for('static', filename='js/jquery-fieldselection.min.js') }}></script>
+
+<script>
+    $( document ).ready(function() {
+        $("#saveOpenModal").click( function() {
+            var dt = new Date();
+            var current_datetime =dt.getDate()+"/" +( dt.getMonth()+1) + "/" + dt.getFullYear() + "_"+ dt.getHours() + ":" + dt.getMinutes();    
+            
+            console.log("Current datetime jquery: ", current_datetime);
+
+            $('#filename').val('annot_'+current_datetime + ".txt");
+        });
+        
+    });
+
+
+    function saveStaticDataToFile() {
+        var text = $("#textarea").text();
+        var filename = $("#filename").val();
+
+
+        var blob = new Blob([text],
+            { type: "text/plain;charset=utf-8" });
+        saveAs(blob, filename);
+    }
+        
+    $(".tagButton").click(function() {
+        
+
+
+        var range = $("#textarea").getSelection();
+        
+        // alert("range start:" + range.start);
+        // alert("range end:" + range.end);
+        // alert("range length:" + range.length);
+
+        if(range.length==0){
+            alert("Please select text first!");
+            return;
+        }
+
+        var btn_text = $(this).text().toLowerCase();
+        
+        textarea = $("#textarea");
+        text = textarea.val()
+       
+        var str_part1 = text.substring(0, range.start);
+        var str_part2 = text.substring(range.start, range.end);
+        var str_part3 = text.substring(range.end);
+
+        console.log("str part1: ", str_part1);
+        console.log("str part2: ", str_part2);
+        console.log("str part3: ", str_part3);
+
+        var final_text = str_part1 + "[[" + btn_text + "]]" + str_part2 + "[[/" + btn_text + "]]" + str_part3;
+
+        textarea.val(final_text);
+
+    });
+
+
+        
+        
+</script>
+
+{% endblock %}

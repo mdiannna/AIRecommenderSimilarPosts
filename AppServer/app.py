@@ -20,12 +20,13 @@ similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
+# app.static('/static', './static')
 app.static('/static', './static')
 # app.static('/static/css', './static/css')
 # app.static('/static/js', './static/js')
 
 print(colored("static", "red"))
-print(app.url_for('static', name='static', filename='css/theme.css'))
+print(app.url_for('static', name='static', filename='css/theme1.css'))
 
 # @app.middleware("request")
 # async def add_session_to_request(request):
@@ -71,6 +72,11 @@ async def demo_similar_images(request):
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
     return jinja.render("demo_ner.html", request)
+
+@app.route('/ner-annotator', methods=['GET'])
+async def ner_annotator(request):
+    text = "test test hello lalala"
+    return jinja.render("ner_annotator.html", request, text=text)
 
 
 # TODO

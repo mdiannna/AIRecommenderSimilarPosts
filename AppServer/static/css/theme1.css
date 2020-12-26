@@ -26,7 +26,8 @@
   --success: #FEC100;
   --info: #63e792;
   --warning: #FFE869;
-  --danger: #703B3B;
+  /* --danger: #703B3B; */
+  --danger: #c82333; #modified here
   --light: #FDFBF7;
   --dark: #555555;
   --breakpoint-xs: 0;
@@ -911,7 +912,9 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
   width: 100%;
   margin-top: 0.25rem;
   font-size: 80%;
-  color: #703B3B; }
+  /* color: #703B3B; */
+  color: #c82333;
+ }
 
 .invalid-tooltip {
   position: absolute;
@@ -930,11 +933,11 @@ select.form-control-lg:not([size]):not([multiple]), .input-group-lg > select.for
 .was-validated .form-control:invalid, .form-control.is-invalid, .was-validated
 .custom-select:invalid,
 .custom-select.is-invalid {
-  border-color: #703B3B; }
+  border-color: #c82333; }
   .was-validated .form-control:invalid:focus, .form-control.is-invalid:focus, .was-validated
   .custom-select:invalid:focus,
   .custom-select.is-invalid:focus {
-    border-color: #703B3B;
+    border-color: #c82333;
     box-shadow: 0 0 0 0.2rem rgba(112, 59, 59, 0.25); }
   .was-validated .form-control:invalid ~ .invalid-feedback,
   .was-validated .form-control:invalid ~ .invalid-tooltip, .form-control.is-invalid ~ .invalid-feedback,
@@ -1181,7 +1184,7 @@ fieldset:disabled a.btn {
 
 .btn-danger {
   color: #fff;
-  background-color: #703B3B;
+  background-color: #c82333;
   border-color: #703B3B; }
   .btn-danger:hover {
     color: #fff;
@@ -5696,3 +5699,4 @@ a.text-dark:hover, a.text-dark:focus {
   .table .thead-dark th {
     color: inherit;
     border-color: #dee2e6; } }
+

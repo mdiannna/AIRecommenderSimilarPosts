@@ -15,13 +15,24 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   
     <link rel="stylesheet" href={{ url_for('static', filename='css/theme1.css') }}>
+    <style>
+      .fill-vertical {
+        min-height: 100%;
+        height: 100%;
+      }
+      .fill-page-vertical {
+        min-height: 80vh;
+        height: 80vh;
+      }
+
+    </style>
     {% block styles%} {% endblock %}
   </head>
 
   <body>
 
     <!-- <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top"> -->
-    <nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-md navbar-expand-lg navbar-dark bg-primary fixed-top">
 
       <a class="navbar-brand" href="/">SimilarityRecommender</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +49,10 @@
             <a class="nav-link" href="/documentation">Documentation</a>
           </li>
           
+          <li class="nav-item">
+            <a class="nav-link" style="display: inline-block; width: 130px;" href="/ner-annotator">NER annotator</a>
+          </li>
+
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Demo</a>
             <div class="dropdown-menu" aria-labelledby="dropdown01">
