@@ -77,7 +77,8 @@ class RuleBasedInformationExtractor():
                 options_extended.append(option.split(' ')[0])
 
         for word in word_tokenize(text):
-            print(colored(word, "green"))
+            if verbose:
+                print(colored(word, "green"))
 
             # TODO: use smth like fuzzy_matching
             if word.lower().strip().translate(str.maketrans('', '', string.punctuation)) in options_extended:
@@ -149,7 +150,7 @@ class RuleBasedInformationExtractor():
                 text(str) - the text to be analyzed
             Returns:
             -----------
-                result: list of dictionaries  in the form {word:field} 
+                result - list of dictionaries in the form {word:field} 
         """
         result = []
 
@@ -162,7 +163,50 @@ class RuleBasedInformationExtractor():
             result.append({item:field_name})
 
         return result
+    
+    def extract_animal_type(self, text, field_name="animal_type", options_filename="specie_animal.txt", options_folder="options/", verbose=False):
+        """ 
+        Extract animal type (species) field from text (name of field depends on language) 
+            Parameters:
+            -----------
+                text(str) - the text to be analyzed
+            Returns:
+            -----------
+                result - list of dictionaries in the form {word:field} 
+        """
+        result = []
 
+        if self.language=="ro":
+            field_name = "specie_animal"
+        
+        extracted = self.extract_field_from_options(text, options_filename, options_folder, verbose)
+        
+        for item in extracted:
+            result.append({item:field_name})
+
+        return result
+
+    def extract_phone(self, text, field_name="phone", regex_filename="telefon.txt", regex_folder="regex/", verbose=False):
+        """
+        Extract phone field from text (name of field depends on language)
+            Parameters:
+            -----------
+                text(str) - the text to be analyzed
+            Returns:
+            -----------
+                result - list of dictionaries in the form {word:field}
+        """
+        result = []
+
+        if self.language=="ro":
+            field_name = "telefon"
+        
+        extracted = self.extract_field_from_regex(text, regex_filename, regex_folder, verbose)
+        
+        for item in extracted:
+            result.append({item:field_name})
+
+        return result
 
     @property
     def fields_to_extract(self):

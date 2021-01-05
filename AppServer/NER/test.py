@@ -15,6 +15,8 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
     extracted_breeds = extractor.extract_breed(sample_text1, verbose=True)
     print(extracted_breeds)
 
+    extracted = extractor.extract_animal_type(sample_text1)
+    print("Specie animal:", extracted)
 
     # For word tokenization:
     # from nltk.tokenize import word_tokenize
@@ -26,3 +28,9 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
 
     extracted = extractor.extract_field_from_regex(sample_text2, regex_filename='telefon.txt', verbose=True)
     print(extracted)
+
+    extracted = extractor.extract_phone(sample_text2, verbose=True)
+    print(extracted)
+
+    extracted = extractor.extract_animal_type(sample_text2)
+    print("Specie animal:", extracted)
