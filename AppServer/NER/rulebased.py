@@ -63,9 +63,9 @@ class RuleBasedInformationExtractor():
         if options_folder=='options/':
             script_dir = os.path.dirname(__file__) 
             rel_path = "options/"
-            abs_file_path = os.path.join(script_dir, rel_path)
+            options_folder = os.path.join(script_dir, rel_path)
 
-        f = open(abs_file_path + options_filename)
+        f = open(options_folder + options_filename)
         options = f.readlines()
 
         options = [x.lower().replace('\n', '').strip() for x in options]
@@ -112,9 +112,9 @@ class RuleBasedInformationExtractor():
         if regex_folder=='regex/':
             script_dir = os.path.dirname(__file__) 
             rel_path = "regex/"
-            abs_file_path = os.path.join(script_dir, rel_path)
+            regex_folder = os.path.join(script_dir, rel_path)
 
-        f = open(abs_file_path + regex_filename)
+        f = open(regex_folder + regex_filename)
         options_regex = f.readlines()
 
         if verbose:
@@ -141,6 +141,41 @@ class RuleBasedInformationExtractor():
                 i+=1
 
         return extracted
+
+
+    def extract_field(self, text, field_name, extraction_type, filename, folder="", verbose=False):
+        """
+        Extract field from text
+            Parameters:
+            -----------
+                text(str) - the text to be analyzed
+                field_name(str) - the name of field to return
+                extraction_type(str) - can be either 'options' or 'regex'
+                filename(str) - the name of the file containing option or regex
+                folder(str) - the name of the folder containing file for option or regex
+                verbose(bool) - True to show more output, False for less output
+        """
+        result = []
+
+        if extraction_type=="options":
+            if folder=="":
+                options_folder = "options/"
+            extracted = self.extract_field_from_options(text, filename, options_folder, verbose)
+        
+        elif extraction_type=="regex":
+            if folder=="":
+                regex_folder = "regex/"
+            extracted = self.extract_field_from_regex(text, filename, regex_folder, verbose)
+        
+        else:
+            print(colored("!Error! extraction_type should be either 'options' or 'regex'", 'red'))
+            extracted = []
+        
+        for item in extracted:
+            result.append({item:field_name})
+        
+        return result
+
 
     def extract_breed(self, text, field_name="breed", options_filename="rase_caini.txt", options_folder="options/", verbose=False):
         """ 
@@ -207,6 +242,9 @@ class RuleBasedInformationExtractor():
             result.append({item:field_name})
 
         return result
+    
+    
+
 
     @property
     def fields_to_extract(self):

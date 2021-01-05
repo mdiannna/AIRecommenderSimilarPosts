@@ -34,3 +34,11 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
 
     extracted = extractor.extract_animal_type(sample_text2)
     print("Specie animal:", extracted)
+
+
+    print("---- test general extract_field() function---")
+    extracted = extractor.extract_field(sample_text2, "specie", "options", "specie_animal.txt")
+    print("Specie animal:", extracted)
+
+    extracted = extractor.extract_field(sample_text2, "tel", "regex", "telefon.txt")
+    print("Telefon:", extracted)
