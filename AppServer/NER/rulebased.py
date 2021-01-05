@@ -2,6 +2,8 @@ from termcolor import colored
 import os
 from nltk.tokenize import word_tokenize
 import string
+import re
+
 
 # TODO: check if output maybe needs to be the same as for NER???
 class RuleBasedInformationExtractor():
@@ -41,6 +43,20 @@ class RuleBasedInformationExtractor():
         return result
     
     def extract_field_from_options(self, text, options_filename, options_folder="options/", verbose=False):
+        """ 
+        Extract field from text according to files containing list of options
+            Parameters:
+            -----------
+            text(str) - text from which to extract fields
+            options_filename(str) - the name of the file containing list of options
+            options_folder(str) - the name of the folder containing options file
+            verbose(bool) - True to show more output, False for less output
+
+            Returns:
+            -----------
+            extracted(list of str) - list of extracted fields from text            
+        """
+
         extracted = []
         
         #TODO: make this code better!
@@ -71,6 +87,57 @@ class RuleBasedInformationExtractor():
         if verbose:
             print(colored("---options:", "blue"), options_extended)
             print(colored("---options_extended:", "blue"), options_extended)
+
+        return extracted
+    
+    def extract_field_from_regex(self, text, regex_filename, regex_folder='regex/', verbose=False):
+        """ 
+        Extract field from text according to files containing regular expressions
+            Parameters:
+            -----------
+            text(str) - text from which to extract fields
+            regex_filename(str) - the name of the file containing regex
+            regex_folder(str) - the name of the folder containing regex file
+            verbose(bool) - True to show more output, False for less output
+
+            Returns:
+            -----------
+            extracted(list of str) - list of extracted fields from text            
+        """
+
+        extracted = []
+        
+        #TODO: make this code better!
+        if regex_folder=='regex/':
+            script_dir = os.path.dirname(__file__) 
+            rel_path = "regex/"
+            abs_file_path = os.path.join(script_dir, rel_path)
+
+        f = open(abs_file_path + regex_filename)
+        options_regex = f.readlines()
+
+        if verbose:
+            print(colored("options_regex:", "blue"), options_regex)
+
+        for reg in options_regex:
+            reg = reg.replace("\n", "").replace("\\\\", '\\')
+
+
+            pattern = re.compile(reg)
+            if verbose:
+                print(colored("reg:", "blue"), reg)
+                print(colored("compiled pattern:", "blue"), pattern)
+
+            i = 0
+            for line in text.split("\n"):
+                if verbose:
+                    print(colored("line:", "yellow"), line)
+                
+                for match in re.finditer(pattern, line):
+                    if verbose:
+                        print (colored('Found on line %s: %s' % (i+1, match.group()), "green"))
+                    extracted.append(match.group())
+                i+=1
 
         return extracted
 

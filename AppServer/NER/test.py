@@ -19,3 +19,10 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
     # For word tokenization:
     # from nltk.tokenize import word_tokenize
     # print(word_tokenize(sample_text1))
+
+
+    print("---- extract from regex:---")
+    sample_text2 = "Motan domestic pierdut! Dacă a fost găsit, rog să fiu contactat la tel.: 062167527. Garantez remunerare!. 123456789"
+
+    extracted = extractor.extract_field_from_regex(sample_text2, regex_filename='telefon.txt', verbose=True)
+    print(extracted)
