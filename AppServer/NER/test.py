@@ -42,3 +42,29 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
 
     extracted = extractor.extract_field(sample_text2, "tel", "regex", "telefon.txt")
     print("Telefon:", extracted)
+
+    print("---- sample text 3: ---")
+    sample_text3 = """Buna ziua, ieri între orele 9:00-11:00 a ieșit din ograda ciinele Labrador Golden Retriever (Mailo) alb, virstă 7 luni, zgarda albastră, perimetru Șos. Muncești și Str. Burebista (Parcul de troleibuz)!
+    După ultimele informatii era in raza Portilor Orasului!
+    Tel. 069063867
+    Ofer Recompensă!!!!"""
+
+    extracted = extractor.extract_field(sample_text3, "specie", "options", "specie_animal.txt", verbose=False)
+    extracted_phone = extractor.extract_field(sample_text3, "tel", "regex", "telefon.txt", verbose=False)
+    extracted_breeds = extractor.extract_breed(sample_text3, verbose=False)
+
+
+    print("Specie animal:", extracted)
+    print("Telefon:", extracted_phone)
+    print("Rasa:", extracted_breeds)
+
+
+    extracted_reward = extractor.extract_field(sample_text3, "recompensa", "options", "recompensa.txt", verbose=False)
+    print("Recompensă: (cu optiuni nu prea merge, trebuie NER NN):", extracted_reward)
+
+
+
+
+
+
+    
