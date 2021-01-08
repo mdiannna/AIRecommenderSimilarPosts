@@ -1,0 +1,280 @@
+abanos
+absint
+acaju
+acaju închis
+acvamarin
+alabastru
+alb
+alb de lapte
+alb de lună
+alb de spania 
+alb de zinc 
+alb-roșcat
+albastru canar
+albastru celest
+albastru cobalt 
+albastru de chiciură
+albastru electric
+albastru foca
+albastru metalic
+albastru mineral
+albastru persan
+albastru petrol
+albastru primar
+albastru regal
+albastru safir
+albastru turcoaz
+albastrul cerului
+alună
+ametist
+antracit
+argilă
+argintiu
+arsenic
+arămiu
+asfințit
+auriu
+avocado
+azur 
+azur brumă
+azurin
+azuriu
+banană
+bej
+bitum
+blond 
+blond flav 
+blond venețian 
+bordo
+bronz
+bronz
+brun
+brun deschis
+brun închis
+brunet 
+cacao
+cafea
+cafea cu lapte
+cafeniu deschis 
+caisă
+capucin
+caramel
+carmin
+castaniu
+castană
+celadon
+cerulen
+chamois
+chaudron
+chihlimbar galben
+chihlimbar roșu
+cinabre
+ciocolată
+cireașă
+clarissimo 
+claro 
+claro claro 
+coacăză neagră
+coacăză roșie
+coadă-de-vacă deschis
+coadă-de-vacă închis
+coajă de ou
+coapsă de nimfă
+colombin 
+colorado 
+colorado claro 
+coral
+cositor oxidat
+cositor pur
+crem
+cupru
+căpșună
+căpșună zdrobită
+cărbune
+cărămiziu
+denim
+dovleac
+drojdie de vin
+fier 
+fildeș
+fistic
+floare de sulf
+foc viu
+foiță de ceapă 
+frunză moartă
+fucsia
+galben auriu
+galben canar
+galben de aur
+galben de crom 
+galben de martie
+galben de napoli 
+galben imperial
+galben mimoză
+galben muștar
+galben nanchin
+galben nasture de aur
+galben pai
+galben porumb
+galben puișor
+galben secundar
+garoafă 
+glycine
+grej
+grenadină
+gri
+gri afumat
+gri bej 
+gri cârtiță
+gri de in
+gri de payne
+gri fier
+gri gălbui 
+gri maur
+gri oțel
+gri pinchard 
+gri plumb
+gri turturea
+gri închis
+gri șoarece
+grâu
+havana
+heliotrop
+in
+indigo
+indigo închis
+jad
+kaki
+lapis-lazuli
+lavallière 
+lavandă
+liliac
+lișiță
+lămâie
+mac
+maduro 
+magenta fucsia 
+magenta secundar
+magenta închis
+malachită
+mandarină
+maro
+mastic
+mentă
+mentă de apă
+miere
+morcov
+mov
+nacarat - roșu sidef
+negru de anilină
+negru de carbon 
+ocru
+ocru galben
+ocru roșu
+oliv
+opalin
+orhidee
+oscuro 
+papaia
+papier bulle
+parma
+passe-velours
+pastel
+pepene galben
+pervenche
+piele de cămilă
+piersică
+platină
+portocaliu
+portocaliu închis
+prasin
+prună
+purice
+purpură
+purpură 
+pământ de siena ars
+rouge tomette
+roz
+roz balais 
+roz bonbon
+roz ceai
+roz drajeu
+roz incarnadin
+roz incarnat
+roz mountbatten
+roșu
+roșu andrinopol
+roșu aprins
+roșu bismarck
+roșu bourgogne
+roșu cardinal
+roșu cărămiziu
+roșu de alizarină 
+roșu de cuarț 
+roșu de roibă
+roșu de sânge
+roșu de tomată
+roșu englez
+roșu ferrari
+roșu gueules 
+roșu înfocat
+roșu-violet
+ruginiu
+réglisse
+sable
+scorțișoară
+senois 
+sepia
+smalt
+smarald
+somon
+stacojiu
+sânge de vită
+tabac
+terre d'ombre
+terre de sienne
+topaz
+turcoaz
+turcoaz secundar
+unt
+vanilie
+verde amandă
+verde anis
+verde chartreuse
+verde de apă
+verde de hooker
+verde de primăvară
+verde de sticlă
+verde de tei
+verde de verona 
+verde de vezică
+verde englez
+verde gazon
+verde gri
+verde imperial
+verde kaki
+verde lariță
+verde lichen
+verde lime
+verde marin
+verde militar
+verde mușchi
+verde măr
+verde opalin
+verde papagal
+verde pin
+verde preri
+verde primaire
+verde salvie
+verde sapin
+verde spanac
+verde turcoaz
+violet
+violet episcopal
+violine
+viride
+vișiniu
+zinzolin
+zmeură
+șampanie
+șofran
