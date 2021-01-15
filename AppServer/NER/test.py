@@ -56,24 +56,47 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
     Tel. 069063867
     Ofer Recompensă!!!!"""
     
-    def extract_fields_from_text(text):
-        print("--- extract from text:")
-        print(colored(text, "yellow"))
+    def extract_fields_from_text(text, language="ro", verbose=False):
+        # TODO: de adaugat un XML config file si de facut asta metoda la rule-based text extractor, sa ia input numele la config file
+        if verbose:
+            print("--- extract from text:")
+            print(colored(text, "yellow"))
+        result = []
 
-        extracted = extractor.extract_field(text, "specie", "options", "specie_animal.txt", verbose=False)
-        extracted_phone = extractor.extract_field(text, "tel", "regex", "telefon.txt", verbose=False)
+        extracted_types = extractor.extract_field(text, "specie", "options", "specie_animal.txt", verbose=False)
+        extracted_phones = extractor.extract_field(text, "tel", "regex", "telefon.txt", verbose=False)
         extracted_breeds = extractor.extract_breed(text, verbose=False)
-        extracted_color = extractor.extract_field(text, "culoare", "options", "extended_colors_list.txt", verbose=False)
-        extracted_reward = extractor.extract_field(text, "recompensa", "options", "recompensa.txt", verbose=False)
+        extracted_colors = extractor.extract_field(text, "culoare", "options", "extended_colors_list.txt", verbose=False)
+        extracted_rewards = extractor.extract_field(text, "recompensa", "options", "recompensa.txt", verbose=False)
         extracted_gender = extractor.extract_field(text, "gen", "options", "gen.txt", verbose=False)
+        
+        result.extend(extracted_types)
+        result.extend(extracted_phones)
+        result.extend(extracted_breeds)
+        result.extend(extracted_colors)
+        result.extend(extracted_gender)
+    
+        for item in extracted_rewards:
+            key = list(item.keys())[0]
+            value = True # This method of text info extraction can detect only the presence of a reward, not the amount
+            if language=="ro":
+                value = "da"
+            if language=="en":
+                value = "yes"
+            result.append({key: value})      
 
-        print("Specie animal:", extracted)
-        print("Telefon:", extracted_phone)
-        print("Rasa:", extracted_breeds)
-        print("Culoare:" , extracted_color)
-        print("Gen:" , extracted_gender)
-        print("Recompensă: (cu optiuni nu prea merge, ca trebuie sa stii care e recompensa, trebuie NER NN):", extracted_reward)
+        if verbose:
+            print("Specie animal:", extracted_types)
+            print("Telefon:", extracted_phones)
+            print("Rasa:", extracted_breeds)
+            print("Culoare:" , extracted_colors)
+            print("Gen:" , extracted_gender)
+            print("Recompensă: (cu optiuni nu prea merge, ca trebuie sa stii care e recompensa, trebuie NER NN):", extracted_rewards)
 
 
-    extract_fields_from_text(sample_text3)
+        return result
+
+    result = extract_fields_from_text(sample_text3, verbose=True)
+    print(colored("-----", "yellow"))
+    print("final result", result)
     
