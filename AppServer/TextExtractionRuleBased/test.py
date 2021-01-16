@@ -100,3 +100,7 @@ Oameni buni, faceti bine azi pentru ca maine sa fiti fericiti pentru ceea ce ati
     print(colored("-----", "yellow"))
     print("final result", result)
     
+
+
+    result =  extractor.extract_fidels_from_config(sample_text3, 'configurations/config.xml', verbose=True)
+    print(colored("Extracted from config file:", "blue"), result)

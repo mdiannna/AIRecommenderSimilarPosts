@@ -3,7 +3,7 @@ import os
 from nltk.tokenize import word_tokenize
 import string
 import re
-
+import xml.etree.ElementTree as ET
 
 # TODO: check if output maybe needs to be the same as for NER???
 class RuleBasedInformationExtractor():
@@ -243,8 +243,97 @@ class RuleBasedInformationExtractor():
 
         return result
     
-    
+    def extract_fidels_from_config(self, text, config_file, verbose=False):
+        """
+        Extract fields specified in XML configurations file
+            Parameters:
+            -----------
+                text(str) - the text to be analyzed
+                config_file - name and path of XML configuration file
+                verbose(bool) - True to show more output, False for less output
+        """
 
+        extracted = []
+        parsing_errors = False
+        
+        # f = open(config_file)
+        # options_regex = f.readlines()
+
+        mytree = ET.parse('configurations/config.xml')
+        myroot = mytree.getroot()
+
+        print(myroot)
+        print("tag:", myroot.tag)
+        print("attrib:", myroot.attrib)
+
+        for child in myroot[0]:
+            # print(child)
+            if child.tag=="rulebased":
+                print(child.tag, child.attrib)
+                rulebased = child
+        
+        for field in rulebased:
+            atts = field.attrib
+            folder = None
+            field_name = field.text.strip()
+
+            if verbose:
+                print(field.tag)
+                print(field.attrib)
+                print(colored('========field name:', "yellow"), field_name)
+                
+            if field_name=="" or field_name ==None:
+                parsing_errors = True
+
+            if "folder" in atts:
+                folder = atts["folder"]
+                print("folder:", folder)
+            if "type" in atts:
+                type_f = atts["type"]
+                if verbose:
+                    print("type:", type_f)
+            else:
+                parsing_errors = True
+            
+            if (not parsing_errors) and "file" in atts:
+                filename = atts["file"]
+                if verbose:
+                    print("file:", filename)                
+            else:
+                parsing_errors = True
+            
+            if not parsing_errors:
+                if type_f=="options":
+                    if folder:
+                        res = self.extract_field_from_options(text, filename, options_folder=folder, verbose=verbose)
+                    else:
+                        res = self.extract_field_from_options(text, filename, verbose=verbose)
+
+                    if verbose:
+                        print(colored("res:", "yellow"), res)
+                    
+                    for item in res:
+                        extracted.append({field_name: item})
+
+                elif type_f=="regex":
+                    if folder != None:
+                        res = self.extract_field_from_regex(text, filename, regex_folder=folder, verbose=verbose)
+                    else:
+                        res = self.extract_field_from_regex(text, filename, verbose=verbose)
+                    
+                    if verbose:
+                        print(colored("res:", "yellow"), res)
+                    for item in res:
+                        extracted.append({field_name: item})
+
+                else:
+                    parsing_errors = True
+
+
+        if parsing_errors:
+            # Change later if needed
+            return extracted, "Parsing errors detected"
+        return extracted, "Successfully extracted"
 
     @property
     def fields_to_extract(self):

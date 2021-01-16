@@ -5,7 +5,7 @@
         </ner>
     
         <rulebased>
-            <field type="options" file="specie_animal.txt" folder="/options">
+            <field type="options" file="specie_animal.txt" folder="options/">
                 specie
             </field>
             <field type="regex" file="telefon.txt">
@@ -14,7 +14,7 @@
             <field type="options" file="rase_caini.txt">
                 rasa_caine
             </field>
-            <field type="options" file="extracted_colors_list.txt">
+            <field type="options" file="extended_colors_list.txt">
                 culoare
             </field>
             <field type="options" file="recompensa.txt">
