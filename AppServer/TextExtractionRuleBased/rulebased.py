@@ -259,7 +259,9 @@ class RuleBasedInformationExtractor():
         # f = open(config_file)
         # options_regex = f.readlines()
 
-        mytree = ET.parse('configurations/config.xml')
+        # mytree = ET.parse('configurations/config.xml')
+        mytree = ET.parse(config_file)
+
         myroot = mytree.getroot()
 
         print(myroot)
@@ -332,8 +334,8 @@ class RuleBasedInformationExtractor():
 
         if parsing_errors:
             # Change later if needed
-            return extracted, "Parsing errors detected"
-        return extracted, "Successfully extracted"
+            return extracted, "parsing errors detected"
+        return extracted, "success"
 
     @property
     def fields_to_extract(self):

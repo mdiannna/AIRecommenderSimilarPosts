@@ -16,6 +16,7 @@ from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User
 from utils import check_password, create_hash
+from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
@@ -155,9 +156,14 @@ async def demo_similar_images(request):
     return jinja.render("demo_similar_images.html", request)
 
 # Method for testing Named Entity Recognition (NER)
+@app.route('/demo-text-info-extractor', methods=['GET'])
+async def demo_text_info_extractor(request):
+    return jinja.render("demo_text_extraction.html", request)
+
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
     return jinja.render("demo_ner.html", request)
+
 
 @app.route('/ner-annotator', methods=['GET'])
 async def ner_annotator(request):
@@ -189,10 +195,12 @@ async def request_similar_posts(request):
     """
 
     if not 'post_image' in request.args:
-        return abort(400, 'Mush include the "post_image" as a parameter in request!')
+        return response.json({"status":"error", "message":'Must include the "post_image" as a parameter in request!'}, status=400)
+        # return abort(400, 'Must include the "post_image" as a parameter in request!') refactored
     
     if not 'post_text' in request.args:
-        return abort(400, 'Mush include the "post_text" as a parameter in request!')
+        return response.json({"status":"error", "message":'Must include the "post_text" as a parameter in request!'}, status=400)
+        # return abort(400, 'Must include the "post_text" as a parameter in request!')
     
     post_img = request.args['post_image']
     post_txt = request.args['post_text']
@@ -210,9 +218,59 @@ async def request_similar_posts(request):
         return response.json(result)
     except Exception as e:
         # TODO: log somewhere
-        return abort(500, str(e))
+        # return abort(500, str(e)) refactored
+        return response.json({"status":"error", "message":str(e)}, status=500)
+        
 
     return response.json("TODO: make post and save to db")
+
+
+
+# Exemplu de post request:
+#curl -X POST  -H "Content-Type: application/json" \
+# -d 'text=S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,Va rugam frumos sa ne anuntati daca stiti ceva informatie despre prietenul familie&token=tobedefined' http://0.0.0.0:5005/api/text-extract
+# TODO: need to be authorized from API - check real token!
+# TODO: remove GET method after testing!
+@app.route('/api/text-extract', methods=['POST', 'GET'])
+async def simple_text_extract(request):
+    params = []
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+
+    # TODO: check if token is correct - AUTH
+    if not("token" in params and "text" in params):
+        return response.json({"status":"error", "message":"missing parameters text or token in request"}, status=400)
+
+    try:
+        text = str(params["text"])
+    except:
+        return response.json({"status":"error", "message":"text parameter has wrong format"}, status=400)
+
+    extractor = RuleBasedInformationExtractor()
+    
+    # TODO: add logs if needed
+    try:
+        result =  extractor.extract_fidels_from_config(text, 'TextExtractionRuleBased/configurations/config.xml', verbose=False)
+        # for debug: log it & delete it!
+        # print(colored("Extracted from config file:", "blue"), result)
+
+        if result[1]=="success":
+            return response.json({"status":"success", "result": result, "message":""})
+        else:
+            return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "result": []}, status=500)
+    except:
+        return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+
+    return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+    
 
 
 if __name__ == '__main__':
