@@ -5,6 +5,10 @@ Teza de licenta - AI system for recommending similar posts
 To start mongo:
 ``` $ sudo systemctl start mongod```
 
+## If problems with tensorflow/keras, use command:
+``` $ pip install --user --upgrade tensorboard```
+
+https://stackoverflow.com/questions/62465620/error-keras-requires-tensorflow-2-2-or-higher
 
 
 #### Useful resources and links
