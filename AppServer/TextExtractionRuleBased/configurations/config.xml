@@ -14,6 +14,9 @@
             <field type="options" file="rase_caini.txt">
                 rasa_caine
             </field>
+            <field type="options" file="adresa.txt">
+                adresa
+            </field>
             <field type="options" file="extended_colors_list.txt">
                 culoare
             </field>

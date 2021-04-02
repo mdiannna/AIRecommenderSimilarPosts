@@ -42,6 +42,7 @@ class RuleBasedInformationExtractor():
 
         return result
     
+
     def extract_field_from_options(self, text, options_filename, options_folder="options/", verbose=False):
         """ 
         Extract field from text according to files containing list of options
@@ -91,6 +92,7 @@ class RuleBasedInformationExtractor():
 
         return extracted
     
+
     def extract_field_from_regex(self, text, regex_filename, regex_folder='regex/', verbose=False):
         """ 
         Extract field from text according to files containing regular expressions
@@ -130,15 +132,29 @@ class RuleBasedInformationExtractor():
                 print(colored("compiled pattern:", "blue"), pattern)
 
             i = 0
-            for line in text.split("\n"):
-                if verbose:
-                    print(colored("line:", "yellow"), line)
-                
-                for match in re.finditer(pattern, line):
+            # for line in text.split("\n"):
+            for line1 in text.splitlines():
+                for line in line1.split("\n"):
                     if verbose:
-                        print (colored('Found on line %s: %s' % (i+1, match.group()), "green"))
-                    extracted.append(match.group())
-                i+=1
+                        print(colored("line:", "yellow"), line)
+                    
+                    for match in re.finditer(pattern, line):
+                        if verbose:
+                            print (colored('Found on line %s: %s' % (i+1, match.group()), "green"))
+                        extracted.append(match.group())
+                    i+=1
+
+        #Delete later
+        print("extracted:", extracted)
+        # Verify in extracted if an extracted entity is a subset of another entity:
+        for item1 in extracted:
+            for item2 in extracted:
+                if item1!=item2:
+                    if (str(item1) in str(item2)):
+                        extracted.remove(item1)
+                    elif (str(item2) in str(item1)):
+                        extracted.remove(item2)
+
 
         return extracted
 
@@ -199,6 +215,7 @@ class RuleBasedInformationExtractor():
 
         return result
     
+
     def extract_animal_type(self, text, field_name="animal_type", options_filename="specie_animal.txt", options_folder="options/", verbose=False):
         """ 
         Extract animal type (species) field from text (name of field depends on language) 
@@ -220,6 +237,7 @@ class RuleBasedInformationExtractor():
             result.append({item:field_name})
 
         return result
+
 
     def extract_phone(self, text, field_name="phone", regex_filename="telefon.txt", regex_folder="regex/", verbose=False):
         """
@@ -243,6 +261,7 @@ class RuleBasedInformationExtractor():
 
         return result
     
+
     def extract_fidels_from_config(self, text, config_file, verbose=False):
         """
         Extract fields specified in XML configurations file
@@ -337,17 +356,21 @@ class RuleBasedInformationExtractor():
             return extracted, "parsing errors detected"
         return extracted, "success"
 
+
     @property
     def fields_to_extract(self):
         return self.__fields_to_extract
     
+
     @fields_to_extract.setter
     def fields_to_extract(self, fields):
         self.__fields_to_extract = fields
 
+
     @property
     def language(self):
         return self.__language
+
     
     @language.setter
     def language(self, lang):

@@ -219,6 +219,7 @@ async def request_similar_posts(request):
     except Exception as e:
         # TODO: log somewhere
         # return abort(500, str(e)) refactored
+        print("Error: " + str(e))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
 
@@ -259,14 +260,18 @@ async def simple_text_extract(request):
     # TODO: add logs if needed
     try:
         result =  extractor.extract_fidels_from_config(text, 'TextExtractionRuleBased/configurations/config.xml', verbose=False)
+        # result =  extractor.extract_fidels_from_config(text, 'TextExtractionRuleBased/configurations/config.xml', verbose=True)
+
         # for debug: log it & delete it!
         # print(colored("Extracted from config file:", "blue"), result)
 
         if result[1]=="success":
             return response.json({"status":"success", "result": result, "message":""})
         else:
+            print("Error: " + str(result))
             return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "result": []}, status=500)
-    except:
+    except Exception as e:
+        print("Error: " + str(e))
         return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
 
     return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
