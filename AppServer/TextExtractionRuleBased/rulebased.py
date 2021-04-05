@@ -110,7 +110,6 @@ class RuleBasedInformationExtractor():
 
         extracted = []
         
-        #TODO: make this code better!
         if regex_folder=='regex/':
             script_dir = os.path.dirname(__file__) 
             rel_path = "regex/"
