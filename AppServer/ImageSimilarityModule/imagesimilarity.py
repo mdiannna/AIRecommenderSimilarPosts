@@ -39,9 +39,15 @@ class ImageSimilarity:
         self.__imgs_model_height = imgs_model_height
 
         self.__nr_similar_imgs = nr_similar_imgs
+
+
+        self.model = self.load_model(model_name='vgg16', from_keras=True)
+
+        print(self.model.summary())
     
     
-    def compute_similarity(self, img_path1, img_path2, nr_similar_imgs=None):
+    # TODO: parametru metric sa poata fi setat!
+    def compute_similarity(self, img_path1, img_path2):
         """ 
         Compute similarity score between 2 images
             Parameters:
@@ -58,22 +64,40 @@ class ImageSimilarity:
         TODO: decis algoritm (cosine similarity sau jaccard similarity sau Jensen-Shannon distance sau Earth Mover distance etc)
         """
 
-        if nr_similar_imgs!=None:
-            self.nr_similar_imgs = nr_similar_imgs
-
         score = 0
 
-        model = self.load_model(model_name='vgg16', from_keras=True)
+        #TODO: check if it is in db, if not, extract features
+        img1_features = self.extract_features(self.model, img_path1)
+        img2_features = self.extract_features(self.model, img_path2)
 
-        print(model.summary())
+        print("img1 features:", img1_features, "shape: ", img1_features.shape)
+        print("img2 features:", img2_features, "shape: ", img2_features.shape)
 
-        # TODO: next implement
-
-        raise NotImplementedError
-
-        # TODO:Implement
-        return score     
+        arr_features = np.array([img1_features, img2_features])
+        arr_features = arr_features.reshape(2, arr_features.shape[2])
+        print("arr features:", arr_features)
         
+        print("arr features shape:", arr_features.shape)
+
+        # TODO: try catch or return 0 if error
+        cosSimilarities = cosine_similarity(arr_features)
+        score = cosSimilarities[0][1]
+       
+        return score     
+    
+    
+    #TODO: finish this function!!!
+    def compute_similarity_batch(self, imgs_features):
+        # compute cosine similarities between images
+
+        cosSimilarities = cosine_similarity(imgs_features)
+
+        # store the results into a pandas dataframe
+
+        cos_similarities_df = pd.DataFrame(cosSimilarities, columns=files, index=files)
+        cos_similarities_df.head()
+
+        #TODO: finish this function!!!
 
 
     def get_most_similar(self, img_path, nr_similar_imgs=3):
@@ -95,17 +119,14 @@ class ImageSimilarity:
 
         score = 0
 
-        model = self.load_model(model_name='vgg16', from_keras=True)
-
-        print(model.summary())
-
+       
         #TODO: later, additionally to img_path add a list of potential images, not to search through all of them!!
         imgs_to_compare = [self.imgs_path + x for x in os.listdir(self.imgs_path) if ("png" in x) or ("jpg" in x)or ("jpeg" in x)]
         print("imgs_to_compare[0]:", imgs_to_compare[0])
         print("number of images:",len(imgs_to_compare))
 
-        # features = self.extract_features(model, imgs_to_compare[0])
-        base_img_features = self.extract_features(model, img_path)
+        # features = self.extract_features(self.model, imgs_to_compare[0])
+        base_img_features = self.extract_features(self.model, img_path)
         print("base_img features:", base_img_features)
         
 
@@ -173,6 +194,8 @@ class ImageSimilarity:
 
     # TODO: acest proces se face doar la inceput, sau pentru fiecare imagine individual si se salveaza/updateaza in db,
     # in asa mod nu va fi complexitate mare si timp mare
+    #TODO: se poate de facut functie import_images cu mai multe imagini, dar nush daca trebuie
+    #TODO!!! fiecare user trebuie sa aiba separat folderul de fisiere/ bd 
     def extract_features_list_imgs(self, model, imgs_paths_lst):
         """ Extract features for all the image paths from a list """
         # load all the images and prepare them for feeding into the CNN

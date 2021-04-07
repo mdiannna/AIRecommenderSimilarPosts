@@ -11,11 +11,11 @@
 * ==========================================
 *
 */
-#upload {
+.upload-input {
     opacity: 0;
 }
 
-#upload-label {
+#upload-label, #upload-label2 {
     position: absolute;
     top: 50%;
     left: 1rem;
@@ -50,25 +50,55 @@
 
 {% block body %}
 
-<h1 class="ui header text-center mb-4">Get similar image demo</h1>
+<h1 class="ui header text-center mb-4">Image similarity demo</h1>
 <!-- <p>Upload image, write text, click "Post"!</p> -->
 
 
 <form>
     <div class="row">
-        <div class="col-lg-6 mx-auto text-center">
+        <div class="col-lg-4 mx-auto text-center">
 
-            <label for="" class="label">Upload image for the post:</label>
+            <label for="" class="label">Upload image 1:</label>
             <!-- Upload image input-->
             <div class="input-group mb-3 px-2 py-2 rounded-pill bg-white shadow-sm">
-                <input id="upload" type="file" onchange="readURL(this);" class="form-control border-0" name="post_image">
+                <input id="upload" type="file" onchange="readURL(this);" class="form-control border-0 upload-input" name="post_image">
                 <label id="upload-label" for="upload" class="font-weight-light text-muted">Choose file</label>
                 <div class="input-group-append">
                     <label for="upload" class="btn btn-light m-0 rounded-pill px-4"> <i class="fa fa-cloud-upload mr-2 text-muted"></i><small class="text-uppercase font-weight-bold text-muted">Choose file</small></label>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success ">Submit</button>
+            <!-- Uploaded image area-->
+            <!-- <p class="font-italic text-center">The image uploaded will be rendered inside the box below.</p> -->
+            <div class="image-area mt-4"><img id="uploadImageResult" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block"></div>
+        </div>
+        <div class="col-lg-4 mx-auto text-center">
+
+
+            <!-- ------------img 2-------- -->
+            <label for="" class="label">Upload image 2:</label>
+            <!-- Upload image input-->
+            <div class="input-group mb-3 px-2 py-2 rounded-pill bg-white shadow-sm">
+                <input id="upload2" type="file" onchange="readURL(this);" class="form-control border-0 upload-input" name="post_image2">
+                <label id="upload-label2" for="upload" class="font-weight-light text-muted">Choose file</label>
+                <div class="input-group-append">
+                    <label for="upload2" class="btn btn-light m-0 rounded-pill px-4"> <i class="fa fa-cloud-upload mr-2 text-muted"></i><small class="text-uppercase font-weight-bold text-muted">Choose file</small></label>
+                </div>
+            </div>
+
+            <!-- Uploaded image area-->
+            <!-- <p class="font-italic text-center">The image uploaded will be rendered inside the box below.</p> -->
+            <div class="image-area mt-4"><img id="uploadImageResult2" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block"></div>
+
+          
+        </div>
+    </div>
+    <div class="row">
+        
+        <div class="col-lg-4 mx-auto text-center">
+
+            <button type="submit" class="btn btn-success ">Compute similarity</button>
+
         </div>
     </div>
 
@@ -90,15 +120,19 @@ function readURL(input) {
         var reader = new FileReader();
 
         reader.onload = function (e) {
-            $('#imageResult')
-                .attr('src', e.target.result);
+            if (input.id=="upload"){
+                $('#uploadImageResult').attr('src', e.target.result);
+            }
+            if (input.id=="upload2"){
+                $('#uploadImageResult2').attr('src', e.target.result);
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
 }
 
 $(function () {
-    $('#upload').on('change', function () {
+    $('.upload-input').on('change', function () {
         readURL(input);
     });
 });
@@ -107,13 +141,21 @@ $(function () {
     SHOW UPLOADED IMAGE NAME
 * ========================================== */
 var input = document.getElementById( 'upload' );
+var input2 = document.getElementById( 'upload2' );
+
 var infoArea = document.getElementById( 'upload-label' );
+var infoArea2 = document.getElementById( 'upload-label2' );
+
 
 input.addEventListener( 'change', showFileName );
 function showFileName( event ) {
   var input = event.srcElement;
   var fileName = input.files[0].name;
-  infoArea.textContent = 'File name: ' + fileName;
+  if (input.id=="upload"){
+    infoArea.textContent = 'File name: ' + fileName;
+  } else if (input.id=="upload2"){
+    infoArea2.textContent = 'File name: ' + fileName;
+  }
 }
 
 </script>
