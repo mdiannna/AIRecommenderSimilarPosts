@@ -11,11 +11,21 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 
-from img_custom_errors import ModelNotFoundError
 
+
+# TODO: do smth later
+class CustomException(Exception):
+    pass
+
+class CustomError(Exception):
+    pass
+
+class ModelNotFoundError(Exception):
+    pass
 
 
 class ImageSimilarity:    
+    #TODO: sters imgs_path parametru
     def __init__(self, imgs_path, model_path=None, imgs_model_width = 224, imgs_model_height = 224, nr_similar_imgs=5):
         """ 
         Init class

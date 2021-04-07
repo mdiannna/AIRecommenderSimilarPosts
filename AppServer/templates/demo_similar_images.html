@@ -54,7 +54,7 @@
 <!-- <p>Upload image, write text, click "Post"!</p> -->
 
 
-<form>
+<form id="imgSimForm" action="/api/image-pairs-similarity" enctype=multipart/form-data>
     <div class="row">
         <div class="col-lg-4 mx-auto text-center">
 
@@ -103,6 +103,10 @@
     </div>
 
 </form>
+
+
+<div id="results">
+
 
 <!-- <hr> -->
 <!-- <h1 class="ui header">{{ greetings }}</h1> -->
@@ -157,6 +161,90 @@ function showFileName( event ) {
     infoArea2.textContent = 'File name: ' + fileName;
   }
 }
+
+// Make ajax request
+
+$( "#imgSimForm" ).submit(function( event ) {
+    
+    // Stop form from submitting normally
+    event.preventDefault();
+    
+    // Get some values from elements on the page:
+    var $form = $( this );
+    // var text = $form.find( "textarea[name='post_text']" ).val();
+    var img_path1= infoArea.textContent;
+    var img_path2= infoArea2.textContent;
+    // alert(img_path1);
+    console.log("files:", input.files[0]);
+
+
+    var url = $form.attr( "action" );
+
+
+
+    var formData = new FormData();
+
+    // // add assoc key values, this will be posts values
+    formData.append("img1", input.files[0], input.files[0].name);
+    formData.append("img2", input2.files[0], input2.files[0].name);
+
+    formData.append("upload_file", true);
+
+
+    // data ={"token": "test-demo", "text": text};
+    // var formData = data;
+    // var posting = $.post( url, formData, contentType=false, processData=false );
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        // xhr: function () {
+        //     var myXhr = $.ajaxSettings.xhr();
+        //     if (myXhr.upload) {
+        //         myXhr.upload.addEventListener('progress', that.progressHandling, false);
+        //     }
+        //     return myXhr;
+        // },
+        success: function (data) {
+            // your callback here
+            $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
+
+            console.log("succes:" + data);
+            console.log("succes:" + data.data);
+
+
+            
+
+
+        },
+        error: function (error) {
+            // handle error
+            $("#results").html("***error: "+error);
+            console.log("error:", error);
+
+        },
+        async: true,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        // timeout: 60000
+    });
+
+    // $.ajax({
+    //     type: "POST",
+    //     url: "/api/text-extract",
+    //     data: data,
+    //     // success: success,
+    //     // dataType: dataType
+    //   });
+    // $("#results").html("***");
+
+    // posting.done(function( data) {
+    //     console.log("data:", data);
+    //     console.log("data res", data.result);
+    // });
+});
 
 </script>
 {% endblock %}

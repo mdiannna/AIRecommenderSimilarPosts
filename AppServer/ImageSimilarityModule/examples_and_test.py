@@ -1,8 +1,8 @@
 from imagesimilarity import ImageSimilarity
 
 # imgSim = ImageSimilarity(imgs_path="images")
-imgSim = ImageSimilarity(imgs_path="ImageSimilarityModule/images")
-
+imgSim = ImageSimilarity(imgs_path="ImageSimilarityModule/images") #TODO: sters imgs_path parametru
+ 
 
 # imgSim.compute_similarity("img1", "img2")
 # TODO: finish
