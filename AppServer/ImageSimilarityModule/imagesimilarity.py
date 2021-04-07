@@ -32,6 +32,8 @@ class ImageSimilarity:
         # parameters setup
 
         # imgs_path = "../input/style/"
+        if imgs_path[-1]!="/":
+            imgs_path += "/"
         self.__imgs_path = imgs_path
         self.__imgs_model_width = imgs_model_width
         self.__imgs_model_height = imgs_model_height
@@ -97,6 +99,16 @@ class ImageSimilarity:
 
         print(model.summary())
 
+        #TODO: later, additionally to img_path add a list of potential images, not to search through all of them!!
+        imgs_to_compare = [self.imgs_path + x for x in os.listdir(self.imgs_path) if ("png" in x) or ("jpg" in x)or ("jpeg" in x)]
+        print("imgs_to_compare[0]:", imgs_to_compare[0])
+        print("number of images:",len(imgs_to_compare))
+
+        # features = self.extract_features(model, imgs_to_compare[0])
+        base_img_features = self.extract_features(model, img_path)
+        print("base_img features:", base_img_features)
+        
+
         # TODO: next implement
 
         #TODO: implement
@@ -124,6 +136,68 @@ class ImageSimilarity:
         # self.model_path(str) [optional] - specifies the model_path if from_keras is false TODO: implement
 
         raise ModelNotFoundError
+
+    # TODO: set model as internal class parameter???
+    def extract_features(self, model, img_path):
+        """ Extract features using model from one image path"""
+
+        # load an image in PIL format
+        original = load_img(img_path, target_size=(self.imgs_model_width, self.imgs_model_height))
+        
+        # show img
+        # plt.imshow(original)
+        # plt.show()
+        print("image loaded successfully!")
+
+        # convert the PIL image to a numpy array
+        numpy_image = img_to_array(original)
+
+        # convert the image / images into batch format
+        # expand_dims will add an extra dimension to the data at a particular axis
+        # we want the input matrix to the network to be of the form (batchsize, height, width, channels)
+        # thus we add the extra dimension to the axis 0.
+        image_batch = np.expand_dims(numpy_image, axis=0)
+        print('image batch size', image_batch.shape)
+
+        # prepare the image for the VGG model
+        img_processed = preprocess_input(image_batch.copy())
+
+
+        # get the extracted features
+        img_features = model.predict(img_processed)
+
+        print("features successfully extracted!")
+        print("number of image features:",img_features.size)
+        return img_features
+
+
+    # TODO: acest proces se face doar la inceput, sau pentru fiecare imagine individual si se salveaza/updateaza in db,
+    # in asa mod nu va fi complexitate mare si timp mare
+    def extract_features_list_imgs(self, model, imgs_paths_lst):
+        """ Extract features for all the image paths from a list """
+        # load all the images and prepare them for feeding into the CNN
+
+        imported_images = []
+
+        for img_path in imgs_paths_lst:
+            original = load_img(img_path, target_size=(self.imgs_model_width, self.imgs_model_height))
+            np_image = img_to_array(original)
+            image_batch = np.expand_dims(np_image, axis=0)
+            
+            imported_images.append(image_batch)
+            
+        imgs = np.vstack(imported_images)
+
+        processed_imgs = preprocess_input(imgs.copy())
+
+        # extract the images features
+
+        imgs_features = model.predict(processed_imgs)
+
+        print("features successfully extracted!")
+        imgs_features.shape
+
+        return imgs_features
 
     @property
     def model_path(self):
