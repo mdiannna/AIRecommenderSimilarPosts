@@ -195,6 +195,8 @@ $( "#imgSimForm" ).submit(function( event ) {
     // var formData = data;
     // var posting = $.post( url, formData, contentType=false, processData=false );
 
+    $("#results").html("Loading... wait please");
+
     $.ajax({
         type: "POST",
         url: url,
@@ -210,10 +212,10 @@ $( "#imgSimForm" ).submit(function( event ) {
             $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
 
             console.log("succes:" + data);
-            console.log("succes:" + data.data);
+            console.log("data sim:", data.similarity_score)
+            console.log("succes:" + data.data);          
 
-
-            
+            $("#results").html("Similarity score: " + data.similarity_score);
 
 
         },
