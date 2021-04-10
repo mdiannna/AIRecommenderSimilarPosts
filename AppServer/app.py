@@ -47,14 +47,26 @@ app.config['DEBUG'] = True
 
 app.static('/static', './static')
 
+
 # for debug of static files folder:
 # print(colored("static", "red"))
 # print(app.url_for('static', name='static', filename='css/theme1.css'))
 
 
+imgSim = None
+
+@app.listener('before_server_start')
+async def setup_db(app, loop):
+    global imgSim
+    # init image similarity module class
+    imgSim = ImageSimilarity(imgs_path="images/") #TODO: sters imgs_path parametru
+
+
 # NOTE
 # For demonstration purpose, we use a mock-up globally-shared session object.
 session = {}
+
+
 
 @app.middleware('request')
 async def add_session(request):
@@ -344,7 +356,6 @@ async def get_img_pairs_similarity(request):
         print("img path1:", img_path1)
         print("img path2:", img_path2)
 
-        imgSim = ImageSimilarity(imgs_path="images/") #TODO: sters imgs_path parametru
 
         # TODO:make async!!
         similarity_score = imgSim.compute_similarity(img_path1, img_path2)
