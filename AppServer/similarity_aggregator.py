@@ -4,10 +4,11 @@ from text_module import TextModule
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 
 class SimilarityAggregator():
-    def __init__(self, weight_text='auto', weight_image='auto'):
+    # TODO: add text config_path param to be used in text module when using this class
+    def __init__(self, weight_text='auto', weight_image='auto', text_module_config_path='configurations/config.xml'):
         
         self.img_module = ImageSimilarity() 
-        self.text_module = TextModule()
+        self.text_module = TextModule(config_path=text_module_config_path)
 
         self.set_weights(weight_image, weight_text)        
 
@@ -105,7 +106,8 @@ class SimilarityAggregator():
 
 
 if __name__=="__main__":
-    sa = SimilarityAggregator()
+    # sa = SimilarityAggregator()
+    sa = SimilarityAggregator(text_module_config_path='configurations/config.xml')
 
 
     text1 = """S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,"""
