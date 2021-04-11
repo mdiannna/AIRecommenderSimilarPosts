@@ -59,11 +59,11 @@ imgSim = None
 async def setup_db(app, loop):
     global imgSim
     # init image similarity module class
-    imgSim = ImageSimilarity(imgs_path="images/") #TODO: sters imgs_path parametru
+    imgSim = ImageSimilarity() 
 
 
-# NOTE
-# For demonstration purpose, we use a mock-up globally-shared session object.
+# TODO: NOTE
+# For demonstration purpose, use a mock-up globally-shared session object.
 session = {}
 
 
