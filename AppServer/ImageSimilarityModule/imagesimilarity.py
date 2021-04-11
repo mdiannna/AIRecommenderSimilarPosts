@@ -75,7 +75,7 @@ class ImageSimilarity:
 
         # TODO: try catch or return 0 if error
         cosSimilarities = cosine_similarity(arr_features)
-        score = cosSimilarities[0][1]
+        score = float(cosSimilarities[0][1])
        
         return score     
 
