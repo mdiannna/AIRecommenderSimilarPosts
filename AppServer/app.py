@@ -7,6 +7,7 @@ from sanic_jinja2 import SanicJinja2
 import os
 from post import Post
 from termcolor import colored
+import aiofiles
 
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
@@ -18,8 +19,13 @@ from models import User
 from utils import check_password, create_hash
 from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 
+from ImageSimilarityModule.imagesimilarity import ImageSimilarity
+
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
+app.config.UPLOAD_FOLDER = 'images'
+
+
 
 # settings = dict(MOTOR_URI='mongodb://db-mongo:27018/service2-mongo-students',
 #                 LOGO=None)
@@ -41,14 +47,26 @@ app.config['DEBUG'] = True
 
 app.static('/static', './static')
 
+
 # for debug of static files folder:
 # print(colored("static", "red"))
 # print(app.url_for('static', name='static', filename='css/theme1.css'))
 
 
-# NOTE
-# For demonstration purpose, we use a mock-up globally-shared session object.
+imgSim = None
+
+@app.listener('before_server_start')
+async def setup_db(app, loop):
+    global imgSim
+    # init image similarity module class
+    imgSim = ImageSimilarity() 
+
+
+# TODO: NOTE
+# For demonstration purpose, use a mock-up globally-shared session object.
 session = {}
+
+
 
 @app.middleware('request')
 async def add_session(request):
@@ -219,11 +237,11 @@ async def request_similar_posts(request):
     except Exception as e:
         # TODO: log somewhere
         # return abort(500, str(e)) refactored
+        print("Error: " + str(e))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
 
     return response.json("TODO: make post and save to db")
-
 
 
 # Exemplu de post request:
@@ -259,18 +277,110 @@ async def simple_text_extract(request):
     # TODO: add logs if needed
     try:
         result =  extractor.extract_fidels_from_config(text, 'TextExtractionRuleBased/configurations/config.xml', verbose=False)
+        # result =  extractor.extract_fidels_from_config(text, 'TextExtractionRuleBased/configurations/config.xml', verbose=True)
+
         # for debug: log it & delete it!
         # print(colored("Extracted from config file:", "blue"), result)
 
         if result[1]=="success":
             return response.json({"status":"success", "result": result, "message":""})
         else:
+            print("Error: " + str(result))
             return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "result": []}, status=500)
-    except:
+    except Exception as e:
+        print("Error: " + str(e))
         return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
 
     return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+
+
+
+
+
+def allowed_file(filename, allowed_extensions):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+
+@app.route("/api/image-pairs-similarity", methods=['POST'])
+async def get_img_pairs_similarity(request):
+    params = []
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+
+
+    # TODO: check
+    # allowed_extensions = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'img1' not in request.files or 'img2' not in request.files:
+            return response.json({"status":"error", "message":"no file part"}, status=400)
+            # flash('No file part')
+            # return redirect(request.url)
+
+        # file = request.files['img1']  
+        # print("file:", file)
+
+        # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
+        upload_folder_name = app.config.UPLOAD_FOLDER
+        if not os.path.exists(upload_folder_name):
+            os.makedirs(upload_folder_name)
+
+
+        print("upload_folder_name:", upload_folder_name)
+        if upload_folder_name[-1]!="/":
+            upload_folder_name += "/"
+
+        img_path1 = upload_folder_name+request.files["img1"][0].name
+
+        async with aiofiles.open(upload_folder_name+request.files["img1"][0].name, 'wb') as f:
+            await f.write(request.files["img1"][0].body)
+
+        img_path2 = upload_folder_name+request.files["img2"][0].name
+
+        async with aiofiles.open(img_path2, 'wb') as f:
+            await f.write(request.files["img2"][0].body)
+        
+
+        print("img path1:", img_path1)
+        print("img path2:", img_path2)
+
+
+        # TODO:make async!!
+        similarity_score = imgSim.compute_similarity(img_path1, img_path2)
+        print("similarity score:", similarity_score)
+
+        if similarity_score and similarity_score>0:
+            return response.json({"status":"success", "similarity_score": str(similarity_score)})
+            # TODO
+        #     # if user does not select file, browser also
+        #     # submit an empty part without filename
+        #     if file.filename == '':
+        #         flash('No selected file')
+        #         return redirect(request.url)
+        #     if file and allowed_file(file.filename):
+        #         filename = secure_filename(file.filename)
+        #         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        #         return redirect(url_for('uploaded_file',
+        #                                 filename=filename))
+        # # return 
+
+
+
+    return response.json("TODO: compute similarity & return")
     
+  
 
 
 if __name__ == '__main__':
