@@ -48,9 +48,9 @@ class ImageSimilarity:
         print(self.model.summary())
     
     
-    def compute_similarity_btw_features(self, img1_features, img2_features):
+    def calc_similarity_btw_features(self, img1_features, img2_features):
         """ 
-        Compute similarity score between the features of 2 images already extracted
+        Calculate similarity score between the features of 2 images already extracted
             Parameters:
             ----------
                 img1_features (str) - features extracted from img1
@@ -82,9 +82,9 @@ class ImageSimilarity:
 
     # TODO: parametru metric sa poata fi setat!
     # TODO: poate de pus si db path, sau la init class sa fie, sau ca parametri cumva
-    def compute_similarity(self, img_path1, img_path2):
+    def calc_similarity(self, img_path1, img_path2):
         """ 
-        Compute similarity score between 2 images
+        Calculate similarity score between 2 images
             Parameters:
             ----------
                 img_path1 (str) - path where first image is stored
@@ -102,15 +102,15 @@ class ImageSimilarity:
         img1_features = self.extract_features(self.model, img_path1)
         img2_features = self.extract_features(self.model, img_path2)
 
-        return self.compute_similarity_btw_features(img1_features, img2_features)
+        return self.calc_similarity_btw_features(img1_features, img2_features)
     
     
     
     # TODO: test this function!
     # TODO: add more metrics if needed, not just cos similarity
-    def compute_similarity_batch(self, imgs_features, imgs_paths_lst, verbose=False):
+    def calc_similarity_batch(self, imgs_features, imgs_paths_lst, verbose=False):
         """ 
-        Compute the similarity between multiple images 
+        Calculate the similarity between multiple images 
         -------
         parameters:
             - imgs_features(np array) - the extracted features from images (obtained with the function extract_features_batch_imgs)
@@ -118,7 +118,7 @@ class ImageSimilarity:
             - verbose(bool) - if True prints more output
         -------
         returns:
-            - cos_similarities_df (pd dataframe) - the similarities computed between each pairs of images in form of dataframe table
+            - cos_similarities_df (pd dataframe) - the similarities calcd between each pairs of images in form of dataframe table
         """
         # compute cosine similarities between images
         cosSimilarities = cosine_similarity(imgs_features)
@@ -134,14 +134,14 @@ class ImageSimilarity:
 
     #TODO: se poate cu imgs_path,0 dar se poate sa fie in db undeva / dataframe cu image features extracted
     #TODO: ?? se poate de separat in  get_most_similar_from_path() si get_most_similar_from_db()
-    def get_most_similar(self, base_img_path, imgs_path, nr_similar_imgs=3):
+    def get_most_similar(self, base_img_path, imgs_path, max_similar_imgs=3):
         """ 
         Get the most similar images to the image specified in img_path
             Parameters:
             ----------
                 base_img_path (str) - path where the image is stored
                 imgs_path(str) - path where are the other images (TODO: decis if needed)
-                nr_similar_imgs (int) - how many top similar images to return (by default 3) 
+                max_similar_imgs (int) - how many top similar images to return (by default 3) 
             Returns:
             ----------
                 results (list of dictionaries) - a list of similar images with their similarity score, in the form

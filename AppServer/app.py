@@ -202,14 +202,14 @@ async def make_post(request):
     return response.json("TODO: make post and save to db")
 
 
-# TODO: verificat daca nu trebuie sa fie sincrona! si daca nu trebuie post!
+# TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
 # TODO: need to be authorized from API
 @app.route('/request-similar-posts', methods=['POST'])
 async def request_similar_posts(request):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
-    The arguments should be "post_image", "post_text" and "n" (optional).
-    If not included in request, n is by default 3
+    The arguments should be "post_image", "post_text" and "max_similar" (optional).
+    If not included in request, max_similar is by default 3
     """
 
     if not 'post_image' in request.args:
@@ -223,16 +223,18 @@ async def request_similar_posts(request):
     post_img = request.args['post_image']
     post_txt = request.args['post_text']
 
-    post = Post(post_img, post_txt)
+    # post = Post(post_img, post_txt)
     
-    n = 3 # default 3 posts
+    max_similar = 3 # default 3 similar posts maximum
 
-    if 'n' in request.args:
-        n = request.args['n']
+    if 'max_similar' in request.args:
+        max_similar = request.args['max_similar']
     
     # TODO
     try:
-        result = similarity.get_similar_posts(post, n)
+        # result = similarity.get_similar_posts(post, n)
+        result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+
         return response.json(result)
     except Exception as e:
         # TODO: log somewhere
