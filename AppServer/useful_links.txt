@@ -10,3 +10,6 @@ https://medium.com/@pyk/a-guide-to-instrument-sanic-application-part-1-193b3eb40
 
 bootstrap image preview:
 https://jsfiddle.net/bootstrapious/8w7a50n2	
+
+
+sanic-JWT (JSON Web Token): https://sanic-jwt.readthedocs.io/en/latest/pages/simpleusage.html

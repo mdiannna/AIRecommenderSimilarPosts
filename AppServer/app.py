@@ -11,14 +11,17 @@ import aiofiles
 
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
+from sanic_jwt.decorators import protected
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User
 from utils import check_password, create_hash
-from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
+from sanic_jwt import exceptions
+from sanic_jwt import initialize
 
+from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 
 app = Sanic(__name__)
@@ -37,10 +40,12 @@ BaseModel.init_app(app)
 
 auth = Auth(app)
 
+
 jinja = SanicJinja2(app, autoescape=True)
 session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
 
-similarity = SimilarityAggregator()
+# TODO: fix problem of allocating ... for GPU twice
+# similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
@@ -115,6 +120,32 @@ async def login(request):
 
     # return response.html(HTML_LOGIN_FORM)
     return jinja.render("login.html", request)
+
+
+async def api_auth(request, *args, **kwargs):
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+
+    if not username or not password:
+        raise exceptions.AuthenticationFailed("Missing username or password.")
+
+    user = await User.find_one({"name":username})
+
+    
+    print("user:", user)
+    # user = some_datastore.get(name=username)
+    if user != None and check_password(user.password, password):
+        #temporary solution:
+        user_dict = {
+            "user_id": str(user.id),
+            "username": user.username,
+            "password": user.password
+        }
+        # auth.login_user(request, user)
+        return user_dict
+
+    raise exceptions.AuthenticationFailed("Wrong username or password.")
+    
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -381,8 +412,27 @@ async def get_img_pairs_similarity(request):
 
 
     return response.json("TODO: compute similarity & return")
-    
-  
+
+
+### Test route for api, can be accessed only with a valid acces_token
+# example request:
+# curl localhost:5005/api/test-iv -H "Authorization: Bearer eyJ0eXAiOiJKg02E" http:/localhost:5005/api/test-api
+@app.route("/api/test-api", methods=['POST', 'GET'])
+@protected() #can access route only with valid token
+def test_api_auth(request):
+  return response.json("Hello!")
+
+
+initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me')
+# https://sanic-jwt.readthedocs.io/en/latest/pages/endpoints.html
+# initialize(
+#     app,
+#     url_prefix='/api/auth'
+#     path_to_authenticate='/my_authenticate',
+#     path_to_retrieve_user='/my_retrieve_user',
+#     path_to_verify='/my_verify', # => localhost:5000/api/auth/my_v
+#     path_to_refresh='/my_refresh',
+# )
 
 
 if __name__ == '__main__':
