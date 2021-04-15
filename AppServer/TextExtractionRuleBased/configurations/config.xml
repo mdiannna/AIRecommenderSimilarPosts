@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>   
+<config language="ro" regexfolder="/regex" optionsfolder="/options">
+    <textsimilarity>
+        <ner>
+        </ner>
+    
+        <rulebased>
+            <field type="options" file="specie_animal.txt" folder="options/">
+                specie
+            </field>
+            <field type="regex" file="telefon.txt">
+                telefon
+            </field>
+            <field type="options" file="rase_caini.txt">
+                rasa_caine
+            </field>
+            <field type="options" file="adresa.txt">
+                adresa
+            </field>
+            <field type="options" file="extended_colors_list.txt">
+                culoare
+            </field>
+            <field type="options" file="recompensa.txt">
+                recompensa
+            </field>
+            <field type="options" file="gen.txt">
+                gen
+            </field>            
+        </rulebased>
+        
+    </textsimilarity>
+
+    <imagesimilarity>
+    </imagesimilarity>
+</config>
+        
