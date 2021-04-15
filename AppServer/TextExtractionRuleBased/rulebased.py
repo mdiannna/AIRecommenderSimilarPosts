@@ -24,13 +24,15 @@ class RuleBasedInformationExtractor():
         self.__language = language
 
 
-    def extract_fields(self, text):
+    def extract_fields(self, text, return_standardized=False):
         """
         Extract fields specified in fields_to_extract list from the text and returns results in a list of dictionaries
 
             Parameters:
             ----------
                 fields_to_extract (list): a list of strings
+                text(str) - the text from which to extract fields
+                return_standardized(bool) - if True, will return in lowercase, without punctuations, standard format
 
             Returns: 
                 result: list of dictionaries  in the form {word:field}
@@ -39,11 +41,13 @@ class RuleBasedInformationExtractor():
         # result = [{"word":"field"}]
         result = []
         
+        # TODO: implement!!
+        raise NotImplementedError
 
         return result
     
 
-    def extract_field_from_options(self, text, options_filename, options_folder="options/", verbose=False):
+    def extract_field_from_options(self, text, options_filename, options_folder="options/", return_standardized=False, verbose=False):
         """ 
         Extract field from text according to files containing list of options
             Parameters:
@@ -51,6 +55,7 @@ class RuleBasedInformationExtractor():
             text(str) - text from which to extract fields
             options_filename(str) - the name of the file containing list of options
             options_folder(str) - the name of the folder containing options file
+            return_standardized(bool) - if True, will return in lowercase, without punctuations, standard format
             verbose(bool) - True to show more output, False for less output
 
             Returns:
@@ -82,8 +87,12 @@ class RuleBasedInformationExtractor():
                 print(colored(word, "green"))
 
             # TODO: use smth like fuzzy_matching
-            if word.lower().strip().translate(str.maketrans('', '', string.punctuation)) in options_extended:
-                extracted.append(word)
+            word_standardized = word.lower().strip().translate(str.maketrans('', '', string.punctuation))
+            if word_standardized in options_extended:
+                if return_standardized:
+                    extracted.append(word_standardized)
+                else:
+                    extracted.append(word)
 
         # TODO: add logging
         if verbose:
@@ -93,7 +102,7 @@ class RuleBasedInformationExtractor():
         return extracted
     
 
-    def extract_field_from_regex(self, text, regex_filename, regex_folder='regex/', verbose=False):
+    def extract_field_from_regex(self, text, regex_filename, regex_folder='regex/', return_standardized=False, verbose=False):
         """ 
         Extract field from text according to files containing regular expressions
             Parameters:
@@ -101,6 +110,7 @@ class RuleBasedInformationExtractor():
             text(str) - text from which to extract fields
             regex_filename(str) - the name of the file containing regex
             regex_folder(str) - the name of the folder containing regex file
+            return_standardized(bool) - if True, will return in lowercase, without punctuations, standard format
             verbose(bool) - True to show more output, False for less output
 
             Returns:
@@ -145,6 +155,7 @@ class RuleBasedInformationExtractor():
 
         #Delete later
         print("extracted:", extracted)
+        # TODO: check later
         # Verify in extracted if an extracted entity is a subset of another entity:
         for item1 in extracted:
             for item2 in extracted:
@@ -158,7 +169,7 @@ class RuleBasedInformationExtractor():
         return extracted
 
 
-    def extract_field(self, text, field_name, extraction_type, filename, folder="", verbose=False):
+    def extract_field(self, text, field_name, extraction_type, filename, folder="", return_standardized=False, verbose=False):
         """
         Extract field from text
             Parameters:
@@ -168,6 +179,7 @@ class RuleBasedInformationExtractor():
                 extraction_type(str) - can be either 'options' or 'regex'
                 filename(str) - the name of the file containing option or regex
                 folder(str) - the name of the folder containing file for option or regex
+                return_standardized(bool) - if True, will return in lowercase, without punctuations, standard format
                 verbose(bool) - True to show more output, False for less output
         """
         result = []
@@ -175,12 +187,12 @@ class RuleBasedInformationExtractor():
         if extraction_type=="options":
             if folder=="":
                 options_folder = "options/"
-            extracted = self.extract_field_from_options(text, filename, options_folder, verbose)
+            extracted = self.extract_field_from_options(text, filename, options_folder, return_standardized=return_standardized, verbose=verbose)
         
         elif extraction_type=="regex":
             if folder=="":
                 regex_folder = "regex/"
-            extracted = self.extract_field_from_regex(text, filename, regex_folder, verbose)
+            extracted = self.extract_field_from_regex(text, filename, regex_folder, return_standardized=return_standardized, verbose=verbose)
         
         else:
             print(colored("!Error! extraction_type should be either 'options' or 'regex'", 'red'))
@@ -261,13 +273,14 @@ class RuleBasedInformationExtractor():
         return result
     
 
-    def extract_fidels_from_config(self, text, config_file, verbose=False):
+    def extract_fidels_from_config(self, text, config_file, return_standardized=False, verbose=False):
         """
         Extract fields specified in XML configurations file
             Parameters:
             -----------
                 text(str) - the text to be analyzed
                 config_file - name and path of XML configuration file
+                return_standardized(bool) - if True, will return in lowercase, without punctuations, standard format
                 verbose(bool) - True to show more output, False for less output
         """
 
@@ -325,9 +338,9 @@ class RuleBasedInformationExtractor():
             if not parsing_errors:
                 if type_f=="options":
                     if folder:
-                        res = self.extract_field_from_options(text, filename, options_folder=folder, verbose=verbose)
+                        res = self.extract_field_from_options(text, filename, options_folder=folder, verbose=verbose, return_standardized=return_standardized)
                     else:
-                        res = self.extract_field_from_options(text, filename, verbose=verbose)
+                        res = self.extract_field_from_options(text, filename, verbose=verbose, return_standardized=return_standardized)
 
                     if verbose:
                         print(colored("res:", "yellow"), res)
@@ -337,9 +350,9 @@ class RuleBasedInformationExtractor():
 
                 elif type_f=="regex":
                     if folder != None:
-                        res = self.extract_field_from_regex(text, filename, regex_folder=folder, verbose=verbose)
+                        res = self.extract_field_from_regex(text, filename, regex_folder=folder, verbose=verbose,return_standardized=return_standardized)
                     else:
-                        res = self.extract_field_from_regex(text, filename, verbose=verbose)
+                        res = self.extract_field_from_regex(text, filename, verbose=verbose, return_standardized=return_standardized)
                     
                     if verbose:
                         print(colored("res:", "yellow"), res)
