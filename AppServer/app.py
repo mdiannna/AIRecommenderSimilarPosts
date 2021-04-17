@@ -197,20 +197,24 @@ async def documentation(request):
 # Method for testing get similar posts
 @app.route('/demo-similar-posts', methods=['GET'])
 async def demo_similar_posts(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
     return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!")
 
 # Method for testing get similar images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
     return jinja.render("demo_similar_images.html", request)
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
 async def demo_text_info_extractor(request):
-    return jinja.render("demo_text_extraction.html", request)
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    return jinja.render("demo_text_extraction.html", request, token=str(demo_token))
 
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
     return jinja.render("demo_ner.html", request)
 
 
@@ -282,7 +286,8 @@ async def request_similar_posts(request):
 # -d 'text=S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,Va rugam frumos sa ne anuntati daca stiti ceva informatie despre prietenul familie&token=tobedefined' http://0.0.0.0:5005/api/text-extract
 # TODO: need to be authorized from API - check real token!
 # TODO: remove GET method after testing!
-@app.route('/api/text-extract', methods=['POST', 'GET'])
+@app.route('/api/text-extract', methods=['POST'])
+@protected()
 async def simple_text_extract(request):
     params = []
     if request.form:
@@ -294,14 +299,13 @@ async def simple_text_extract(request):
         type_request = "JSON"
         print(colored("json:", "yellow"), request.json)
     else:
-        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+        return response.json({"status":"error", "message":"missing parameter text in request (request type should be json or multipart/form-data)"}, status=400)
 
-    # TODO: check if token is correct - AUTH
-    if not("token" in params and "text" in params):
-        return response.json({"status":"error", "message":"missing parameters text or token in request"}, status=400)
-
+    if not ("text" in params):
+        return response.json({"status":"error", "message":"missing parameter text in request"}, status=400)
     try:
-        text = str(params["text"])
+        text = str(params["text"][0])
+        # print("text:", text)
     except:
         return response.json({"status":"error", "message":"text parameter has wrong format"}, status=400)
 
@@ -336,6 +340,7 @@ def allowed_file(filename, allowed_extensions):
 
 
 @app.route("/api/image-pairs-similarity", methods=['POST'])
+@protected()
 async def get_img_pairs_similarity(request):
     params = []
     if request.form:
@@ -391,7 +396,7 @@ async def get_img_pairs_similarity(request):
 
 
         # TODO:make async!!
-        similarity_score = imgSim.compute_similarity(img_path1, img_path2)
+        similarity_score = imgSim.calc_similarity(img_path1, img_path2)
         print("similarity score:", similarity_score)
 
         if similarity_score and similarity_score>0:
