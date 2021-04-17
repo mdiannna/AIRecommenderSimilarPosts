@@ -198,13 +198,13 @@ async def documentation(request):
 @app.route('/demo-similar-posts', methods=['GET'])
 async def demo_similar_posts(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1})
-    return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!")
+    return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 # Method for testing get similar images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1})
-    return jinja.render("demo_similar_images.html", request)
+    return jinja.render("demo_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
@@ -215,7 +215,7 @@ async def demo_text_info_extractor(request):
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1})
-    return jinja.render("demo_ner.html", request)
+    return jinja.render("demo_ner.html", request, token=str(demo_token))
 
 
 @app.route('/ner-annotator', methods=['GET'])
@@ -332,8 +332,6 @@ async def simple_text_extract(request):
 
 
 
-
-
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
@@ -352,7 +350,7 @@ async def get_img_pairs_similarity(request):
         type_request = "JSON"
         print(colored("json:", "yellow"), request.json)
     else:
-        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+        return response.json({"status":"error", "message":"missing parameters img1 and img2 in request (request type should be json or multipart/form-data)"}, status=400)
 
 
     # TODO: check
@@ -363,7 +361,7 @@ async def get_img_pairs_similarity(request):
     if request.method == 'POST':
         # check if the post request has the file part
         if 'img1' not in request.files or 'img2' not in request.files:
-            return response.json({"status":"error", "message":"no file part"}, status=400)
+            return response.json({"status":"error", "message":"no files for image1 and image2"}, status=400)
             # flash('No file part')
             # return redirect(request.url)
 
