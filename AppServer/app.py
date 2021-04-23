@@ -7,6 +7,7 @@ from sanic_jinja2 import SanicJinja2
 import os
 from post import Post
 from termcolor import colored
+import time
 import aiofiles
 
 from similarity_aggregator import SimilarityAggregator
@@ -44,8 +45,6 @@ auth = Auth(app)
 jinja = SanicJinja2(app, autoescape=True)
 session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
 
-# TODO: fix problem of allocating ... for GPU twice
-# similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
@@ -59,12 +58,18 @@ app.static('/static', './static')
 
 
 imgSim = None
+similarity = None
 
 @app.listener('before_server_start')
 async def setup_db(app, loop):
     global imgSim
+    global similarity
     # init image similarity module class
     imgSim = ImageSimilarity() 
+    # time.sleep(2)
+    # TODO: fix problem of allocating ... for GPU twice
+    similarity = SimilarityAggregator(image_module=imgSim)
+
 
 
 # TODO: NOTE
@@ -377,6 +382,9 @@ async def get_img_pairs_similarity(request):
         print("upload_folder_name:", upload_folder_name)
         if upload_folder_name[-1]!="/":
             upload_folder_name += "/"
+
+        #add for demo user
+        upload_folder_name += "demo_user/demo/"
 
         img_path1 = upload_folder_name+request.files["img1"][0].name
 

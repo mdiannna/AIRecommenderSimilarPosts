@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
-
+import tensorflow as tf
 
 
 # TODO: do smth later
@@ -176,6 +176,15 @@ class ImageSimilarity:
                 model_name(str) - the name of the model to load
                 from_keras(bool) - specifies if the model loads from keras or not
         """
+
+        # https://stackoverflow.com/questions/51310257/tensorflow-gpu-python-resource-exhausted-error-in-cluster
+        # TF_CONFIG_ = tf.compat.v1.ConfigProto()
+        # TF_CONFIG_.gpu_options.allow_growth = True
+        # TF_CONFIG_.gpu_options.per_process_gpu_memory_fraction = 0.7
+
+        # sess = tf.compat.v1.Session(config = TF_CONFIG_)
+        # #######
+
         if from_keras==True and model_name.lower() =='vgg16':
             # load the model
             vgg_model = vgg16.VGG16(weights='imagenet')
