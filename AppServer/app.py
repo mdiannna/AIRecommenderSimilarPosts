@@ -11,14 +11,17 @@ import aiofiles
 
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
+from sanic_jwt.decorators import protected
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User
 from utils import check_password, create_hash
-from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
+from sanic_jwt import exceptions
+from sanic_jwt import initialize
 
+from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 
 app = Sanic(__name__)
@@ -37,10 +40,12 @@ BaseModel.init_app(app)
 
 auth = Auth(app)
 
+
 jinja = SanicJinja2(app, autoescape=True)
 session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
 
-similarity = SimilarityAggregator()
+# TODO: fix problem of allocating ... for GPU twice
+# similarity = SimilarityAggregator()
 
 # change to false in production!
 app.config['DEBUG'] = True
@@ -117,6 +122,32 @@ async def login(request):
     return jinja.render("login.html", request)
 
 
+async def api_auth(request, *args, **kwargs):
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+
+    if not username or not password:
+        raise exceptions.AuthenticationFailed("Missing username or password.")
+
+    user = await User.find_one({"name":username})
+
+    
+    print("user:", user)
+    # user = some_datastore.get(name=username)
+    if user != None and check_password(user.password, password):
+        #temporary solution:
+        user_dict = {
+            "user_id": str(user.id),
+            "username": user.username,
+            "password": user.password
+        }
+        # auth.login_user(request, user)
+        return user_dict
+
+    raise exceptions.AuthenticationFailed("Wrong username or password.")
+    
+
+
 @app.route('/register', methods=['GET', 'POST'])
 async def register(request):
     message = ''
@@ -166,21 +197,25 @@ async def documentation(request):
 # Method for testing get similar posts
 @app.route('/demo-similar-posts', methods=['GET'])
 async def demo_similar_posts(request):
-    return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!")
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 # Method for testing get similar images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
-    return jinja.render("demo_similar_images.html", request)
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    return jinja.render("demo_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
 async def demo_text_info_extractor(request):
-    return jinja.render("demo_text_extraction.html", request)
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    return jinja.render("demo_text_extraction.html", request, token=str(demo_token))
 
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
-    return jinja.render("demo_ner.html", request)
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    return jinja.render("demo_ner.html", request, token=str(demo_token))
 
 
 @app.route('/ner-annotator', methods=['GET'])
@@ -251,7 +286,8 @@ async def request_similar_posts(request):
 # -d 'text=S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,Va rugam frumos sa ne anuntati daca stiti ceva informatie despre prietenul familie&token=tobedefined' http://0.0.0.0:5005/api/text-extract
 # TODO: need to be authorized from API - check real token!
 # TODO: remove GET method after testing!
-@app.route('/api/text-extract', methods=['POST', 'GET'])
+@app.route('/api/text-extract', methods=['POST'])
+@protected()
 async def simple_text_extract(request):
     params = []
     if request.form:
@@ -263,14 +299,13 @@ async def simple_text_extract(request):
         type_request = "JSON"
         print(colored("json:", "yellow"), request.json)
     else:
-        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+        return response.json({"status":"error", "message":"missing parameter text in request (request type should be json or multipart/form-data)"}, status=400)
 
-    # TODO: check if token is correct - AUTH
-    if not("token" in params and "text" in params):
-        return response.json({"status":"error", "message":"missing parameters text or token in request"}, status=400)
-
+    if not ("text" in params):
+        return response.json({"status":"error", "message":"missing parameter text in request"}, status=400)
     try:
-        text = str(params["text"])
+        text = str(params["text"][0])
+        # print("text:", text)
     except:
         return response.json({"status":"error", "message":"text parameter has wrong format"}, status=400)
 
@@ -297,14 +332,13 @@ async def simple_text_extract(request):
 
 
 
-
-
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
 @app.route("/api/image-pairs-similarity", methods=['POST'])
+@protected()
 async def get_img_pairs_similarity(request):
     params = []
     if request.form:
@@ -316,7 +350,7 @@ async def get_img_pairs_similarity(request):
         type_request = "JSON"
         print(colored("json:", "yellow"), request.json)
     else:
-        return response.json({"status":"error", "message":"missing parameters text and token in request (request type should be json or multipart/form-data)"}, status=400)
+        return response.json({"status":"error", "message":"missing parameters img1 and img2 in request (request type should be json or multipart/form-data)"}, status=400)
 
 
     # TODO: check
@@ -327,7 +361,7 @@ async def get_img_pairs_similarity(request):
     if request.method == 'POST':
         # check if the post request has the file part
         if 'img1' not in request.files or 'img2' not in request.files:
-            return response.json({"status":"error", "message":"no file part"}, status=400)
+            return response.json({"status":"error", "message":"no files for image1 and image2"}, status=400)
             # flash('No file part')
             # return redirect(request.url)
 
@@ -360,7 +394,7 @@ async def get_img_pairs_similarity(request):
 
 
         # TODO:make async!!
-        similarity_score = imgSim.compute_similarity(img_path1, img_path2)
+        similarity_score = imgSim.calc_similarity(img_path1, img_path2)
         print("similarity score:", similarity_score)
 
         if similarity_score and similarity_score>0:
@@ -381,8 +415,27 @@ async def get_img_pairs_similarity(request):
 
 
     return response.json("TODO: compute similarity & return")
-    
-  
+
+
+### Test route for api, can be accessed only with a valid acces_token
+# example request:
+# curl localhost:5005/api/test-iv -H "Authorization: Bearer eyJ0eXAiOiJKg02E" http:/localhost:5005/api/test-api
+@app.route("/api/test-api", methods=['POST', 'GET'])
+@protected() #can access route only with valid token
+def test_api_auth(request):
+  return response.json("Hello!")
+
+
+initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me')
+# https://sanic-jwt.readthedocs.io/en/latest/pages/endpoints.html
+# initialize(
+#     app,
+#     url_prefix='/api/auth'
+#     path_to_authenticate='/my_authenticate',
+#     path_to_retrieve_user='/my_retrieve_user',
+#     path_to_verify='/my_verify', # => localhost:5000/api/auth/my_v
+#     path_to_refresh='/my_refresh',
+# )
 
 
 if __name__ == '__main__':

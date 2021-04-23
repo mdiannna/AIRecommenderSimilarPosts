@@ -11,6 +11,14 @@ To start mongo:
 https://stackoverflow.com/questions/62465620/error-keras-requires-tensorflow-2-2-or-higher
 
 
+## Example request to obtain an auth token from the app:
+``` curl -iv -H "Content-Type: application/json" -d '{"username": "diana", "password": "mypassword"}' http://localhost:5005/api/auth```
+
+## Example request to verify if token is valid:
+```curl -iv -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiNjA2MmQwY2M5M2I5MTMwZjQ5YWMxZTJmIiwiZXhwIjoxNjE4NDk5OTE3fQ.kYHiAag027m_8JcRLDBPp2McPrMRD_JeImpzpn2-SWE" http://localhost:5005/api/auth/verify```
+
+
+
 #### Useful resources and links
 - https://github.com/mekicha/awesome-sanic
 - https://its-a-feature.github.io/posts/2018/04/Creating-an-Apfell-Part-6/
