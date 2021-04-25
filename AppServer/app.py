@@ -9,6 +9,7 @@ from post import Post
 from termcolor import colored
 import time
 import aiofiles
+import pprint
 
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
@@ -17,7 +18,7 @@ from sanic_jwt.decorators import protected
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
 from sanic_motor import BaseModel
-from models import User
+from models import User, Post
 from utils import check_password, create_hash
 from sanic_jwt import exceptions
 from sanic_jwt import initialize
@@ -202,24 +203,24 @@ async def documentation(request):
 # Method for testing get similar posts
 @app.route('/demo-similar-posts', methods=['GET'])
 async def demo_similar_posts(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 # Method for testing get similar images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
 async def demo_text_info_extractor(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_text_extraction.html", request, token=str(demo_token))
 
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1})
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_ner.html", request, token=str(demo_token))
 
 
@@ -229,6 +230,13 @@ async def ner_annotator(request):
     return jinja.render("ner_annotator.html", request, text=text)
 
 
+# Method for testing add post api (delete later if needed )TODO
+@app.route('/demo-add-post', methods=['GET'])
+async def demo_add_post(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    return jinja.render("demo_add_post_api.html", request, greetings="Hello, sanic!", token=str(demo_token))
+
+
 # TODO
 @app.route('/dashboard', methods=['GET'])
 @auth.login_required(user_keyword='user')
@@ -236,10 +244,107 @@ async def dashboard(request, user):
     return jinja.render("dashboard.html", request, user=user.name)
 
 
-# TODO: need to be authorized from API
-@app.route('/make-post', methods=['POST'])
+@protected()
+@app.route('/api/post/create', methods=['POST'])
 async def make_post(request):
-    return response.json("TODO: make post and save to db")
+    #TODO: save & retrieve token of the user
+    # {
+    # '_id': "1242345345",
+    # 'post_id_external': "12", #should restrict: for a user_id post_id_external should be unique
+    # 'user_id': "1231234",
+    # 'img_path': "test.img",  # will be included in images/user_id/
+    # 'text': "S-a pierdut caine de rasa ....", 
+    # 'fields': {
+    #     "rasa_caine": "beagle",
+    #     "locatie": "Chisinau" 
+    # }, 
+    # 'img_features': "[134, 23234, 3423.44, 3243.33]" # array of floats saved as str
+    # }
+
+    print("request args:", request.args)
+    print("request form:", request.form)
+
+    # if not 'post_id' in request.args:
+    if not 'post_id' in request.form:
+        return response.json({"status":"error", "message":'Must include the "post_id" as a parameter in request!'}, status=400)
+
+    # if not 'text' in request.args:
+    if not 'text' in request.form:
+        return response.json({"status":"error", "message":'Must include the "text" as a parameter in request!'}, status=400)
+        # return abort(400, 'Must include the "po
+
+    # post_id_external = request.args['post_id']
+    post_id_external = request.form['post_id']
+    # post_img = request.args['image']
+    # post_text = request.args['text']
+    post_text = request.form['text']
+    
+    username = "user1" #TODO: get this from token request!!! 
+    user_id = "1" #TODO: get this from token request!!!
+    
+    if 'fields' in request.args:
+        fields = request.args['fields']
+
+    #upload image    
+    if 'image' not in request.files:
+        return response.json({"status":"error", "message":"no files for image"}, status=400)
+
+    # file = request.files['img1']  
+    # print("file:", file)
+
+    # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
+    upload_folder_name = app.config.UPLOAD_FOLDER
+
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    print("upload_folder_name:", upload_folder_name)
+    if upload_folder_name[-1]!="/":
+        upload_folder_name += "/"
+
+    upload_folder_name += username + "/"
+
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    img_path = upload_folder_name+request.files["image"][0].name
+
+    async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+        await f.write(request.files["image"][0].body)
+
+    imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
+
+    await Post.insert_one(dict(
+        post_id_external=str(post_id_external),
+        user_id='user' + user_id,
+        img_path=img_path,
+        text=post_text,
+        # fields=fields, #TODO:later,
+        fields=[],
+        img_features=str(imgFeatures)
+        ))
+
+    #TODO
+    return response.json("TODO: Create post normal response & test")
+
+
+# Method for testing viewing all posts, TODO: delete later!!!
+@app.route('/all-posts', methods=['GET'])
+async def view_all_posts(request):
+
+    n = await Post.count_documents({})
+    print('%s posts in collection' % n)
+
+    posts_cursor = await Post.find({})
+    
+    #TODO:!!! fix problem & get posts!!!
+    posts = []
+    for post in posts_cursor.to_list(length=100):
+        pprint.pprint(post)
+        post.pop('_id')
+        posts.append(post)
+
+    return response.json({"TODO":"TODO: Delete this route later!!!", "posts": posts})
 
 
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!

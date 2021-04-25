@@ -214,6 +214,9 @@ class ImageSimilarity:
         returns:
             - img_features(np array) - array of numeric features extracted from image
         """
+        if model=='default':
+            model = self.model
+
 
         # load an image in PIL format
         original = load_img(img_path, target_size=(self.imgs_model_width, self.imgs_model_height))
