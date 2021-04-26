@@ -25,6 +25,9 @@ from sanic_jwt import initialize
 
 from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
+from bson.json_util import dumps, loads
+from bson import json_util
+from utils import post_to_json
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
@@ -274,10 +277,10 @@ async def make_post(request):
         # return abort(400, 'Must include the "po
 
     # post_id_external = request.args['post_id']
-    post_id_external = request.form['post_id']
+    post_id_external = request.form['post_id'][0]
     # post_img = request.args['image']
     # post_text = request.args['text']
-    post_text = request.form['text']
+    post_text = request.form['text'][0]
     
     username = "user1" #TODO: get this from token request!!! 
     user_id = "1" #TODO: get this from token request!!!
@@ -335,16 +338,41 @@ async def view_all_posts(request):
     n = await Post.count_documents({})
     print('%s posts in collection' % n)
 
-    posts_cursor = await Post.find({})
+    posts_cursor = await Post.find(sort='user_id')
+    json_data = []
     
-    #TODO:!!! fix problem & get posts!!!
-    posts = []
-    for post in posts_cursor.to_list(length=100):
-        pprint.pprint(post)
-        post.pop('_id')
-        posts.append(post)
+    results = []
+    for obj in posts_cursor.objects:
+        # print(type(obj))
+        # print(obj)
+        
+        results.append(post_to_json(obj))
 
-    return response.json({"TODO":"TODO: Delete this route later!!!", "posts": posts})
+    #     obj.pop('_id')
+    #     # if obj.student == student:
+    #     # results.append(obj.text)
+    #     # posts.append(obj.user_id)
+    #     # results.append(obj.text)
+    #     results.append(obj)
+
+    # posts = results
+
+    #TODO:!!! fix problem & get posts!!!
+  
+    # marks = cursor_marks.objects
+    # results = []
+    # for obj in marks:
+    #     if obj.student == student:
+    #         results.append(int(obj.mark))
+
+    # posts = []
+    # for post in posts_cursor.to_list(length=100):
+    #     pprint.pprint(post)
+    #     post.pop('_id')
+    #     posts.append(post)
+
+    # return response.json({"TODO":"TODO: Delete this route later!!!", "posts": posts, "results":results})
+    return response.json({"TODO":"TODO: Delete this route later!!!", "posts": results})
 
 
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
