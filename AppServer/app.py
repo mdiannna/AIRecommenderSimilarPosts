@@ -572,6 +572,7 @@ async def get_similar_images(request):
     """ 
     Get n similar image to image included in request, returns n similar images
     The arguments should be "post_image" and "max_similar" (optional).
+    include_paths is opt parameters to return image paths for frontend as well
     If not included in request, max_similar is by default 3
     """
 
@@ -636,9 +637,15 @@ async def get_similar_images(request):
         all_imgs_features[str(obj.id)] =  np.array(data)
 
 
-    imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
+    similarities = imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
     
-    return response.json("TODO: GET SIMILAR IMGS")
+    if 'include_paths' in params:
+        image_paths_map = {"img_id":"img_path TODO"}
+        # TODO: check for errors
+        return response.json({"status":"success", "results":similarities, "img_paths_map":image_paths_map})
+    
+    # TODO: check for errors    
+    return response.json({"status":"success", "results":similarities})
 
 
 

@@ -157,6 +157,7 @@ $( "#imgSimForm" ).submit(function( event ) {
     formData.append("image", input.files[0], input.files[0].name);
 
     formData.append("upload_file", true);
+    formData.append("include_paths", true);
 
     // data ={"token": "test-demo", "text": text};
     // var formData = data;
@@ -179,12 +180,22 @@ $( "#imgSimForm" ).submit(function( event ) {
         success: function (data) {
             $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
 
-            console.log("succes:" + data);
+            console.log("succes:", data);
+            console.log("results:", data.results);
+            var results = data.results;
+            // console.log(results.length);
+            console.log(Object.keys(results));
+            
+            for(var i=0; i<results.length; i++){
+                console.log(results[i]);
+            }
+            console.log("img paths map", data.img_paths_map);
             // console.log("data sim:", data.similarity_score)
             // console.log("succes:" + data.data);          
 
             // $("#results").html("Similarity score: " + data.similarity_score);
-            $("#results").html("Response " + data);
+            // $("#results").html("Response " + data);
+            $("#results").html("Response " + data.results);
 
 
         },

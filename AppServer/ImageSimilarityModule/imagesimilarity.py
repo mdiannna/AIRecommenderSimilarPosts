@@ -175,7 +175,15 @@ class ImageSimilarity:
         print("df similarity:")
         print(df_similarity.head())
 
+        df1 = df_similarity.sort_values('*base_img',ascending = False).head(max_similar_imgs+1).iloc[1:]
+        df2 = df1[['*base_img']]
+        dict_similarities = df2.to_dict()
 
+        if "*base_img" in dict_similarities:
+            return dict_similarities["*base_img"]
+
+        #TODO: try catch return errors???
+        return {}
 
         
 
