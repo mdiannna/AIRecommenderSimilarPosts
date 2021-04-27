@@ -34,6 +34,6 @@ def post_to_json(post_item):
     result['img_path'] = post_item.img_path
     result['text'] = post_item.text
     result['fields'] = post_item.fields
-    result['img_features'] = post_item.features
+    result['img_features'] = post_item.img_features
 
     return result

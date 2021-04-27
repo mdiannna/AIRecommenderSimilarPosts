@@ -11,6 +11,7 @@ import time
 import aiofiles
 import pprint
 
+import json
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
 from sanic_jwt.decorators import protected
@@ -28,6 +29,7 @@ from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 from bson.json_util import dumps, loads
 from bson import json_util
 from utils import post_to_json
+import numpy as np
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
@@ -209,11 +211,17 @@ async def demo_similar_posts(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
-# Method for testing get similar images
+# Method for testing similar pairs of images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_images.html", request, token=str(demo_token))
+
+# Method for testing get similar images
+@app.route('/demo-get-similar-images', methods=['GET'])
+async def demo_get_similar_images(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    return jinja.render("demo_get_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
@@ -317,7 +325,7 @@ async def make_post(request):
         img_path=img_path,
         text=post_text,
         fields=fields, #TODO:later check,
-        img_features=str(imgFeatures)
+        img_features=imgFeatures.tolist()
         ))
 
     #TODO: try catch for errors
@@ -328,6 +336,8 @@ async def make_post(request):
 # Method for testing viewing all posts, TODO: delete later!!!
 @app.route('/all-posts', methods=['GET'])
 async def view_all_posts(request):
+
+    # await Post.delete_many({}) #works as drop
 
     n = await Post.count_documents({})
     print('%s posts in collection' % n)
@@ -369,10 +379,12 @@ async def view_all_posts(request):
     return response.json({"TODO":"TODO: Delete this route later!!!", "posts": results})
 
 
+#TODO!!!!!!!!!! test & finish
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
 # TODO: need to be authorized from API
-@app.route('/request-similar-posts', methods=['POST'])
-async def request_similar_posts(request):
+@protected()
+@app.route('/api/get-similar-posts', methods=['POST'])
+async def get_similar_posts(request):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
     The arguments should be "post_image", "post_text" and "max_similar" (optional).
@@ -473,6 +485,7 @@ def allowed_file(filename, allowed_extensions):
 @protected()
 async def get_img_pairs_similarity(request):
     params = []
+    
     if request.form:
         type_request = "FORM"
         params = request.form
@@ -550,6 +563,83 @@ async def get_img_pairs_similarity(request):
 
 
     return response.json("TODO: compute similarity & return")
+
+
+@protected()
+@app.route('/api/get-similar-images', methods=['POST'])
+# @app.route('/api/get-similar-images')
+async def get_similar_images(request):
+    """ 
+    Get n similar image to image included in request, returns n similar images
+    The arguments should be "post_image" and "max_similar" (optional).
+    If not included in request, max_similar is by default 3
+    """
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form   
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters request (request type should be json or multipart/form-data)"}, status=400)
+
+    max_similar = 3
+    if 'max_similar' in params:
+        try:
+            max_similar = int(params['max_similar'][0])
+        except:
+            print("max_similar param wrong, setting as default to 3") #TODO: add in response
+            max_similar = 3
+        
+    if 'image' not in request.files:
+        return response.json({"status":"error", "message":"missing 'image' file"}, status=400)
+    
+    upload_folder_name = app.config.UPLOAD_FOLDER
+        
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    print("upload_folder_name:", upload_folder_name)
+    if upload_folder_name[-1]!="/":
+        upload_folder_name += "/"
+
+    #TODO!!! get user from token from request!!!
+    username = 'user1'
+    upload_folder_name += username + "/"
+
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    img_path = upload_folder_name+request.files["image"][0].name
+
+    async with aiofiles.open(img_path, 'wb') as f:
+        await f.write(request.files["image"][0].body)
+
+    imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
+    
+    print("img features:", imgFeatures)
+
+    filter = {"user_id":"user1"}
+    # posts_cursor = await Post.find({"user_id":username}) #TODO: get only for the user!!!!
+    # posts_cursor = await Post.find(filter=filter, limit=10) #TODO: get only for the user!!!!
+    posts_cursor = await Post.find(filter=filter, limit=1000) #TODO: get only for the user!!!!
+    json_data = []
+    
+    # results = []
+    all_imgs_features = {}
+
+    for obj in posts_cursor.objects:
+        data = obj.img_features
+        all_imgs_features[str(obj.id)] =  np.array(data)
+
+
+    imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
+    
+    return response.json("TODO: GET SIMILAR IMGS")
+
 
 
 ### Test route for api, can be accessed only with a valid acces_token
