@@ -274,26 +274,20 @@ async def make_post(request):
     # if not 'text' in request.args:
     if not 'text' in request.form:
         return response.json({"status":"error", "message":'Must include the "text" as a parameter in request!'}, status=400)
-        # return abort(400, 'Must include the "po
 
-    # post_id_external = request.args['post_id']
     post_id_external = request.form['post_id'][0]
-    # post_img = request.args['image']
-    # post_text = request.args['text']
     post_text = request.form['text'][0]
     
     username = "user1" #TODO: get this from token request!!! 
     user_id = "1" #TODO: get this from token request!!!
-    
+
+    fields = {}    
     if 'fields' in request.args:
         fields = request.args['fields']
 
     #upload image    
     if 'image' not in request.files:
         return response.json({"status":"error", "message":"no files for image"}, status=400)
-
-    # file = request.files['img1']  
-    # print("file:", file)
 
     # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
     upload_folder_name = app.config.UPLOAD_FOLDER
@@ -322,13 +316,13 @@ async def make_post(request):
         user_id='user' + user_id,
         img_path=img_path,
         text=post_text,
-        # fields=fields, #TODO:later,
-        fields=[],
+        fields=fields, #TODO:later check,
         img_features=str(imgFeatures)
         ))
 
-    #TODO
-    return response.json("TODO: Create post normal response & test")
+    #TODO: try catch for errors
+    return response.json({"status":"success", "message": "post succesfully created"})
+
 
 
 # Method for testing viewing all posts, TODO: delete later!!!
