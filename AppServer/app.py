@@ -631,8 +631,10 @@ async def get_similar_images(request):
     
     # results = []
     all_imgs_features = {}
+    all_img_paths = {}
 
     for obj in posts_cursor.objects:
+        all_img_paths[str(obj.id)]=obj.img_path
         data = obj.img_features
         all_imgs_features[str(obj.id)] =  np.array(data)
 
@@ -640,7 +642,11 @@ async def get_similar_images(request):
     similarities = imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
     
     if 'include_paths' in params:
-        image_paths_map = {"img_id":"img_path TODO"}
+        # image_paths_map = {"img_id":"img_path TODO"}
+        image_paths_map = {}
+
+        for img_id in list(similarities.keys()):
+            image_paths_map[img_id] = all_img_paths[img_id]
         # TODO: check for errors
         return response.json({"status":"success", "results":similarities, "img_paths_map":image_paths_map})
     
