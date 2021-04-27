@@ -55,7 +55,8 @@ session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
 # change to false in production!
 app.config['DEBUG'] = True
 
-app.static('/static', './static')
+app.static('/static', './static', name='static')
+app.static("/images", "./images", name='images')
 
 
 # for debug of static files folder:
@@ -642,6 +643,8 @@ async def get_similar_images(request):
     similarities = imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
     
     if 'include_paths' in params:
+        # app.static("/images", "./images")
+
         # image_paths_map = {"img_id":"img_path TODO"}
         image_paths_map = {}
 
