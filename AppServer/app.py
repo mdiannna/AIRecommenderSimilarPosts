@@ -28,6 +28,8 @@ from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 from bson.json_util import dumps, loads
 from bson import json_util
+from bson.objectid import ObjectId
+
 from utils import post_to_json
 import numpy as np
 
@@ -649,7 +651,8 @@ async def get_similar_images(request):
         image_paths_map = {}
 
         for img_id in list(similarities.keys()):
-            image_paths_map[img_id] = all_img_paths[img_id]
+            if img_id!="*base_img":
+                image_paths_map[img_id] = all_img_paths[img_id]
         # TODO: check for errors
         return response.json({"status":"success", "results":similarities, "img_paths_map":image_paths_map})
     
@@ -663,8 +666,11 @@ async def get_similar_images(request):
 # curl localhost:5005/api/test-iv -H "Authorization: Bearer eyJ0eXAiOiJKg02E" http:/localhost:5005/api/test-api
 @app.route("/api/test-api", methods=['POST', 'GET'])
 @protected() #can access route only with valid token
-def test_api_auth(request):
-  return response.json("Hello!")
+async def test_api_auth(request):
+    # For deleting one post
+    # result =await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
+    # print("deleted:", result.deleted_count)
+    return response.json("Hello!")
 
 
 initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me')
