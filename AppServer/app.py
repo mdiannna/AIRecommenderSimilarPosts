@@ -336,6 +336,84 @@ async def make_post(request):
 
 
 
+
+@app.route('/api/post/update', methods=['POST'])
+@protected()
+async def edit_post(request):
+    print("request args:", request.args)
+    print("request form:", request.form)
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"request type should be json or multipart/form-data"}, status=400)
+    
+    if 'post_id' not in params:
+        return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
+    
+    post_id = params['post_id']
+
+    # TODO: user_id real by token!!!
+    user_id = "user1"
+    username = "user1"
+
+    # post_to_upd = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+    
+
+    try:
+        if 'image' in request:
+            upload_folder_name = app.config.UPLOAD_FOLDER
+
+            if not os.path.exists(upload_folder_name):
+                os.makedirs(upload_folder_name)
+
+            print("upload_folder_name:", upload_folder_name)
+            if upload_folder_name[-1]!="/":
+                upload_folder_name += "/"
+
+            upload_folder_name += username + "/"
+
+            if not os.path.exists(upload_folder_name):
+                os.makedirs(upload_folder_name)
+
+            img_path = upload_folder_name+request.files["image"][0].name
+
+            async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+                await f.write(request.files["image"][0].body)
+
+            imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
+
+            await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
+                update={
+                    'img_path':img_path, 
+                    "img_features": imgFeatures.tolist()})
+
+        if 'text' in params:
+            new_text = params['text']
+            await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
+                update={'text':new_text})
+        
+        # TODO: test!!!
+        if 'fields' in params:
+            new_fields = params['fields']
+            await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
+                update={'fields': new_fields})
+
+        return response.json({"status":"success", "message": "post succesfully updated"})
+
+    except Exception as e:
+        return response.json({"status":"error", "message": "Post not updated. Error: " + str(e)})
+
+    
+
+
+
 @app.route('/api/post/read', methods=['GET'])
 @protected()
 async def read_post(request):
@@ -522,8 +600,6 @@ async def get_similar_posts(request):
 # Exemplu de post request:
 #curl -X POST  -H "Content-Type: application/json" \
 # -d 'text=S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,Va rugam frumos sa ne anuntati daca stiti ceva informatie despre prietenul familie&token=tobedefined' http://0.0.0.0:5005/api/text-extract
-# TODO: need to be authorized from API - check real token!
-# TODO: remove GET method after testing!
 @app.route('/api/text-extract', methods=['POST'])
 @protected()
 async def simple_text_extract(request):
