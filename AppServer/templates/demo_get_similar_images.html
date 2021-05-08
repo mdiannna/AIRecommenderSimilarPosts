@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block styles%}
+<style>
+/*
+*
+* ==========================================
+* CUSTOM UTIL CLASSES
+* ==========================================
+*
+*/
+.upload-input {
+    opacity: 0;
+}
+
+#upload-label, #upload-label2 {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+}
+
+.image-area {
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    padding: 1rem;
+    position: relative;
+}
+
+.image-area::before {
+    content: 'Uploaded image result';
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    z-index: 1;
+}
+
+.image-area img {
+    z-index: 2;
+    position: relative;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+<h1 class="ui header text-center mb-4">Get similar images for image demo</h1>
+<!-- <p>Upload image, write text, click "Post"!</p> -->
+
+
+<form id="imgSimForm" action="/api/get-similar-images" enctype=multipart/form-data>
+    <div class="row">
+        <div class="col-lg-4 mx-auto text-center">
+
+            <label for="" class="label">Upload image:</label>
+            <!-- Upload image input-->
+            <div class="input-group mb-3 px-2 py-2 rounded-pill bg-white shadow-sm">
+                <input id="upload" type="file" onchange="readURL(this);" class="form-control border-0 upload-input" name="post_image">
+                <label id="upload-label" for="upload" class="font-weight-light text-muted">Choose file</label>
+                <div class="input-group-append">
+                    <label for="upload" class="btn btn-light m-0 rounded-pill px-4"> <i class="fa fa-cloud-upload mr-2 text-muted"></i><small class="text-uppercase font-weight-bold text-muted">Choose file</small></label>
+                </div>
+            </div>
+
+            <!-- Uploaded image area-->
+            <!-- <p class="font-italic text-center">The image uploaded will be rendered inside the box below.</p> -->
+            <div class="image-area mt-4"><img id="uploadImageResult" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block"></div>
+        </div>
+    </div>
+    <div class="row">
+        
+        <div class="col-lg-4 mx-auto text-center">
+
+            <button type="submit" class="btn btn-success ">Get similar images</button>
+
+        </div>
+    </div>
+
+</form>
+
+
+<div id="results">
+
+
+<!-- <hr> -->
+<!-- <h1 class="ui header">{{ greetings }}</h1> -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+/*  ==========================================
+    SHOW UPLOADED IMAGE
+* ========================================== */
+function readURL(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+
+        reader.onload = function (e) {
+            if (input.id=="upload"){
+                $('#uploadImageResult').attr('src', e.target.result);
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+$(function () {
+    $('.upload-input').on('change', function () {
+        readURL(input);
+    });
+});
+
+/*  ==========================================
+    SHOW UPLOADED IMAGE NAME
+* ========================================== */
+var input = document.getElementById( 'upload' );
+
+var infoArea = document.getElementById( 'upload-label' );
+
+
+input.addEventListener( 'change', showFileName );
+function showFileName( event ) {
+  var input = event.srcElement;
+  var fileName = input.files[0].name;
+  if (input.id=="upload"){
+    infoArea.textContent = 'File name: ' + fileName;
+  } 
+}
+
+// Make ajax request
+
+$( "#imgSimForm" ).submit(function( event ) {
+    
+    // Stop form from submitting normally
+    event.preventDefault();
+    
+    // Get some values from elements on the page:
+    var $form = $( this );
+    // var text = $form.find( "textarea[name='post_text']" ).val();
+    // var img_path1= infoArea.textContent;
+
+    console.log("files:", input.files[0]);
+    var url = $form.attr( "action" );
+
+
+    var formData = new FormData();
+
+    // // add assoc key values, this will be posts values
+    formData.append("image", input.files[0], input.files[0].name);
+
+    formData.append("upload_file", true);
+    formData.append("include_paths", true);
+
+    // data ={"token": "test-demo", "text": text};
+    // var formData = data;
+    // var posting = $.post( url, formData, contentType=false, processData=false );
+
+    $("#results").html("Loading... wait please");
+
+    var token = "{{token}}";    
+
+    $.ajaxSetup({
+        headers: {
+            'Authorization' : "Bearer {{token}}"
+        }
+    });
+
+
+    function showImages(image_paths, image_ids) {
+        console.log("show imgs", image_ids.length);
+        for (var i=0; i<image_ids.length; i++) {
+            $('#results').append('<img class ="img img-responsive"  style="width:13%" src="' + image_paths[i]+'" />');
+            $('#results').append('<span>' + image_ids[i] + '</span>');
+        }
+
+    }
+    
+    $.ajax({
+        type: "POST",
+        url: url,
+        success: function (data) {
+            $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
+
+            console.log("succes:", data);
+            console.log("results:", data.results);
+            var results = data.results;
+            // console.log(results.length);
+            console.log(Object.keys(results));
+
+            
+            for(var i=0; i<results.length; i++){
+                console.log(results[i]);
+            }
+
+            var image_paths = Object.values(data.img_paths_map);
+            var image_ids = Object.keys(data.img_paths_map)
+
+            console.log("img paths map", data.img_paths_map);
+            console.log('image paths only:', image_paths);
+
+            // console.log("data sim:", data.similarity_score)
+            // console.log("succes:" + data.data);          
+
+            // $("#results").html("Similarity score: " + data.similarity_score);
+            // $("#results").html("Response " + data);
+            $("#results").html("<p>Succes. Similar images:</p>");
+            showImages(image_paths, image_ids);
+
+
+
+        },
+        error: function (error) {
+            // handle error
+            $("#results").html("***error: "+error);
+            console.log("error:", error);
+
+        },
+        async: true,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        // timeout: 60000
+    });
+
+   
+});
+
+</script>
+{% endblock %}

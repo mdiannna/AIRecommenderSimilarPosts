@@ -11,6 +11,7 @@ import time
 import aiofiles
 import pprint
 
+import json
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
 from sanic_jwt.decorators import protected
@@ -27,7 +28,10 @@ from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 from bson.json_util import dumps, loads
 from bson import json_util
+from bson.objectid import ObjectId
+
 from utils import post_to_json
+import numpy as np
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
@@ -53,7 +57,8 @@ session = InMemorySessionInterface(cookie_name=app.name, prefix=app.name)
 # change to false in production!
 app.config['DEBUG'] = True
 
-app.static('/static', './static')
+app.static('/static', './static', name='static')
+app.static("/images", "./images", name='images')
 
 
 # for debug of static files folder:
@@ -209,11 +214,17 @@ async def demo_similar_posts(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
-# Method for testing get similar images
+# Method for testing similar pairs of images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
     demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
     return jinja.render("demo_similar_images.html", request, token=str(demo_token))
+
+# Method for testing get similar images
+@app.route('/demo-get-similar-images', methods=['GET'])
+async def demo_get_similar_images(request):
+    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    return jinja.render("demo_get_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
@@ -317,7 +328,7 @@ async def make_post(request):
         img_path=img_path,
         text=post_text,
         fields=fields, #TODO:later check,
-        img_features=str(imgFeatures)
+        img_features=imgFeatures.tolist()
         ))
 
     #TODO: try catch for errors
@@ -325,9 +336,57 @@ async def make_post(request):
 
 
 
+@protected()
+@app.route('/api/post/read', methods=['GET'])
+async def read_post(request):
+    params = []
+
+    print("request args:", request.args)
+    print("request form:", request.form)
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters in request (request type should be json or multipart/form-data)"}, status=400)
+
+    if 'post_id' not in params:
+        return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
+
+    try:
+
+
+        post_id = str(params['post_id'])
+
+        # TODO: user_id real by token!!!
+        user_id = "user1"
+
+        post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+        if post:
+            # print("post:", post)
+            return response.json({"status":"success", "post": post_to_json(post)})
+
+        #else        
+        return response.json({"status":"error", "message": "post with id '" + post_id + "' not found in the database"}, status=404)
+    except Exception as e:
+        # TODO: log somewhere
+        print("Error: " + str(e))
+        return response.json({"status":"error", "message":str(e)}, status=500)
+        
+    
+
+
+
 # Method for testing viewing all posts, TODO: delete later!!!
 @app.route('/all-posts', methods=['GET'])
 async def view_all_posts(request):
+
+    # await Post.delete_many({}) #works as drop
 
     n = await Post.count_documents({})
     print('%s posts in collection' % n)
@@ -366,13 +425,15 @@ async def view_all_posts(request):
     #     posts.append(post)
 
     # return response.json({"TODO":"TODO: Delete this route later!!!", "posts": posts, "results":results})
-    return response.json({"TODO":"TODO: Delete this route later!!!", "posts": results})
+    return response.json({"posts": results, "TODO":"TODO: Delete this route later!!!"})
 
 
+#TODO!!!!!!!!!! test & finish
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
 # TODO: need to be authorized from API
-@app.route('/request-similar-posts', methods=['POST'])
-async def request_similar_posts(request):
+@protected()
+@app.route('/api/get-similar-posts', methods=['POST'])
+async def get_similar_posts(request):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
     The arguments should be "post_image", "post_text" and "max_similar" (optional).
@@ -452,15 +513,15 @@ async def simple_text_extract(request):
         # print(colored("Extracted from config file:", "blue"), result)
 
         if result[1]=="success":
-            return response.json({"status":"success", "result": result, "message":""})
+            return response.json({"status":"success", "fields": result, "message":""})
         else:
             print("Error: " + str(result))
-            return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "result": []}, status=500)
+            return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "fields": []}, status=500)
     except Exception as e:
         print("Error: " + str(e))
-        return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+        return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "fields": []}, status=500)
 
-    return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+    return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "fields": []}, status=500)
 
 
 
@@ -473,6 +534,7 @@ def allowed_file(filename, allowed_extensions):
 @protected()
 async def get_img_pairs_similarity(request):
     params = []
+    
     if request.form:
         type_request = "FORM"
         params = request.form
@@ -552,13 +614,109 @@ async def get_img_pairs_similarity(request):
     return response.json("TODO: compute similarity & return")
 
 
+@protected()
+@app.route('/api/get-similar-images', methods=['POST'])
+# @app.route('/api/get-similar-images')
+async def get_similar_images(request):
+    """ 
+    Get n similar image to image included in request, returns n similar images
+    The arguments should be "post_image" and "max_similar" (optional).
+    include_paths is opt parameters to return image paths for frontend as well
+    If not included in request, max_similar is by default 3
+    """
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form   
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters request (request type should be json or multipart/form-data)"}, status=400)
+
+    max_similar = 3
+    if 'max_similar' in params:
+        try:
+            max_similar = int(params['max_similar'][0])
+        except:
+            print("max_similar param wrong, setting as default to 3") #TODO: add in response
+            max_similar = 3
+        
+    if 'image' not in request.files:
+        return response.json({"status":"error", "message":"missing 'image' file"}, status=400)
+    
+    upload_folder_name = app.config.UPLOAD_FOLDER
+        
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    print("upload_folder_name:", upload_folder_name)
+    if upload_folder_name[-1]!="/":
+        upload_folder_name += "/"
+
+    #TODO!!! get user from token from request!!!
+    username = 'user1'
+    upload_folder_name += username + "/"
+
+    if not os.path.exists(upload_folder_name):
+        os.makedirs(upload_folder_name)
+
+    img_path = upload_folder_name+request.files["image"][0].name
+
+    async with aiofiles.open(img_path, 'wb') as f:
+        await f.write(request.files["image"][0].body)
+
+    imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
+    
+    print("img features:", imgFeatures)
+
+    filter = {"user_id":"user1"}
+    # posts_cursor = await Post.find({"user_id":username}) #TODO: get only for the user!!!!
+    # posts_cursor = await Post.find(filter=filter, limit=10) #TODO: get only for the user!!!!
+    posts_cursor = await Post.find(filter=filter, limit=1000) #TODO: get only for the user!!!!
+    json_data = []
+    
+    # results = []
+    all_imgs_features = {}
+    all_img_paths = {}
+
+    for obj in posts_cursor.objects:
+        all_img_paths[str(obj.id)]=obj.img_path
+        data = obj.img_features
+        all_imgs_features[str(obj.id)] =  np.array(data)
+
+
+    similarities = imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
+    
+    if 'include_paths' in params:
+        # app.static("/images", "./images")
+
+        # image_paths_map = {"img_id":"img_path TODO"}
+        image_paths_map = {}
+
+        for img_id in list(similarities.keys()):
+            if img_id!="*base_img":
+                image_paths_map[img_id] = all_img_paths[img_id]
+        # TODO: check for errors
+        return response.json({"status":"success", "results":similarities, "img_paths_map":image_paths_map})
+    
+    # TODO: check for errors    
+    return response.json({"status":"success", "results":similarities})
+
+
+
 ### Test route for api, can be accessed only with a valid acces_token
 # example request:
 # curl localhost:5005/api/test-iv -H "Authorization: Bearer eyJ0eXAiOiJKg02E" http:/localhost:5005/api/test-api
 @app.route("/api/test-api", methods=['POST', 'GET'])
 @protected() #can access route only with valid token
-def test_api_auth(request):
-  return response.json("Hello!")
+async def test_api_auth(request):
+    # For deleting one post
+    # result =await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
+    # print("deleted:", result.deleted_count)
+    return response.json("Hello!")
 
 
 initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me')

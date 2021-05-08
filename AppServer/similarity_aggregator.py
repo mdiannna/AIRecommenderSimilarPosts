@@ -76,6 +76,11 @@ class SimilarityAggregator():
         return aggregated_similarity
 
 
+    # #TODO; should include also existing fields!!!
+    # def get_similar_posts_by_features(img_features, text, max_similar_posts, all_img_features,fields=None):
+
+        
+    
     # imag_path & text params because post is not yet in the system
     def get_similar_posts(image_path, text, max_similar_posts):
         # TODO
