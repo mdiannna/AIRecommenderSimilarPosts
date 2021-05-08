@@ -372,7 +372,58 @@ async def read_post(request):
         print("Error: " + str(e))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
-    
+
+
+
+@app.route('/api/post/delete', methods=['POST'])
+@protected()
+async def delete_post(request):
+    params = []
+
+    print("request args:", request.args)
+    print("request form:", request.form)
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters in request (request type should be json or multipart/form-data)"}, status=400)
+
+    if 'post_id' not in params:
+        return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
+
+    try:
+        post_id = str(params['post_id'])
+
+        # TODO: user_id real by token!!!
+        user_id = "user1"
+
+
+        # result = await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
+        result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
+        del_cnt = result.deleted_count
+        print("deleted:", del_cnt)
+
+        if del_cnt>0:
+            # print("post:", post)
+            # TODO: check!! it will always be deleted one post (but need to verify in create not to be duplicate post ids for same user!!!)
+            return response.json({"status":"success", "message": "deleted " + str(del_cnt) + " post(s) with id " + post_id})
+        else:        
+            post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+            if post:
+                return response.json({"status":"error", "message": "post with id '" + post_id + "' not deleted. Something went wrong"}, status=500)
+
+        return response.json({"status":"error", "message": "post with id '" + post_id + "' not found in the database"}, status=404)
+    except Exception as e:
+        # TODO: log somewhere
+        print("Error: " + str(e))
+        return response.json({"status":"error", "message":str(e)}, status=500)
+          
 
 
 
