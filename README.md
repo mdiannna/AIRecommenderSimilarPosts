@@ -19,7 +19,7 @@ https://stackoverflow.com/questions/62465620/error-keras-requires-tensorflow-2-2
 
 
 ## Example of GET request with curl (read post with id1)
-curl -X GET -iv  --header "Content-Type: application/json"  -d '{"post_id": "1"}'  http://localhost:5005/api/post/read
+curl -X GET -iv  -H "Content-Type: application/json"  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiNjA2MmQwY2M5M2I5MTMwZjQ5YWMxZTJmIiwiZXhwIjoxNjIwNDY0MTI0fQ.vA4GkrGAOX3OT0dW7d7FEsGy5Jm2DHUNZyTIAcN-HyY"  -d '{"post_id": "1"}'  http://localhost:5005/api/post/read
 
 
 

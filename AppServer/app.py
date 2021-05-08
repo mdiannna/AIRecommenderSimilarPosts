@@ -258,8 +258,8 @@ async def dashboard(request, user):
     return jinja.render("dashboard.html", request, user=user.name)
 
 
-@protected()
 @app.route('/api/post/create', methods=['POST'])
+@protected()
 async def make_post(request):
     #TODO: save & retrieve token of the user
     # {
@@ -336,31 +336,25 @@ async def make_post(request):
 
 
 
-@protected()
 @app.route('/api/post/read', methods=['GET'])
+@protected()
 async def read_post(request):
     params = []
 
     print("request args:", request.args)
     print("request form:", request.form)
 
-    if request.form:
-        type_request = "FORM"
-        params = request.form
-        print(colored("form:","yellow"), request.form)
-    elif request.json:
+    if request.json:
         params = request.json
         type_request = "JSON"
         print(colored("json:", "yellow"), request.json)
     else:
-        return response.json({"status":"error", "message":"missing parameters in request (request type should be json or multipart/form-data)"}, status=400)
+        return response.json({"status":"error", "message":"missing parameters in request (request type should be json"}, status=400)
 
     if 'post_id' not in params:
         return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
 
     try:
-
-
         post_id = str(params['post_id'])
 
         # TODO: user_id real by token!!!
@@ -431,8 +425,8 @@ async def view_all_posts(request):
 #TODO!!!!!!!!!! test & finish
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
 # TODO: need to be authorized from API
-@protected()
 @app.route('/api/get-similar-posts', methods=['POST'])
+@protected()
 async def get_similar_posts(request):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
