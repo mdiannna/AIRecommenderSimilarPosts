@@ -367,7 +367,7 @@ async def edit_post(request):
     
 
     try:
-        if 'image' in request:
+        if 'image' in request.files:
             upload_folder_name = app.config.UPLOAD_FOLDER
 
             if not os.path.exists(upload_folder_name):
@@ -390,20 +390,20 @@ async def edit_post(request):
             imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
             await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
-                update={
+                update={"$set": {
                     'img_path':img_path, 
-                    "img_features": imgFeatures.tolist()})
+                    "img_features": imgFeatures.tolist()}}, upsert=True)
 
         if 'text' in params:
             new_text = params['text']
             await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
-                update={'text':new_text})
+                update={"$set": {'text':new_text}}, upsert=True)
         
         # TODO: test!!!
         if 'fields' in params:
             new_fields = params['fields']
             await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
-                update={'fields': new_fields})
+                update={"$set": {'fields': new_fields}}, upsert=True)
 
         return response.json({"status":"success", "message": "post succesfully updated"})
 
