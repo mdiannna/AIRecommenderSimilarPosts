@@ -336,6 +336,52 @@ async def make_post(request):
 
 
 
+@protected()
+@app.route('/api/post/read', methods=['GET'])
+async def read_post(request):
+    params = []
+
+    print("request args:", request.args)
+    print("request form:", request.form)
+
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters in request (request type should be json or multipart/form-data)"}, status=400)
+
+    if 'post_id' not in params:
+        return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
+
+    try:
+
+
+        post_id = str(params['post_id'])
+
+        # TODO: user_id real by token!!!
+        user_id = "user1"
+
+        post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+        if post:
+            # print("post:", post)
+            return response.json({"status":"success", "post": post_to_json(post)})
+
+        #else        
+        return response.json({"status":"error", "message": "post with id '" + post_id + "' not found in the database"}, status=404)
+    except Exception as e:
+        # TODO: log somewhere
+        print("Error: " + str(e))
+        return response.json({"status":"error", "message":str(e)}, status=500)
+        
+    
+
+
+
 # Method for testing viewing all posts, TODO: delete later!!!
 @app.route('/all-posts', methods=['GET'])
 async def view_all_posts(request):
@@ -379,7 +425,7 @@ async def view_all_posts(request):
     #     posts.append(post)
 
     # return response.json({"TODO":"TODO: Delete this route later!!!", "posts": posts, "results":results})
-    return response.json({"TODO":"TODO: Delete this route later!!!", "posts": results})
+    return response.json({"posts": results, "TODO":"TODO: Delete this route later!!!"})
 
 
 #TODO!!!!!!!!!! test & finish
@@ -467,15 +513,15 @@ async def simple_text_extract(request):
         # print(colored("Extracted from config file:", "blue"), result)
 
         if result[1]=="success":
-            return response.json({"status":"success", "result": result, "message":""})
+            return response.json({"status":"success", "fields": result, "message":""})
         else:
             print("Error: " + str(result))
-            return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "result": []}, status=500)
+            return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "fields": []}, status=500)
     except Exception as e:
         print("Error: " + str(e))
-        return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+        return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "fields": []}, status=500)
 
-    return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "result": []}, status=500)
+    return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "fields": []}, status=500)
 
 
 
