@@ -1,9 +1,15 @@
 from sanic_motor import BaseModel
 
+# name is the username, bc. Sanic-Auth requires the "name" parameter to be present 
 class User(BaseModel):
     __coll__ = 'users'
-    __unique_fields__ = ['name', 'password']     
+    __unique_fields__ = ['name']     
     
+
+    def to_dict(self):
+        properties = ['_id', 'name', 'verified']
+        return {prop: getattr(self, prop, None) for prop in properties}
+
 
 # example of Post:
 # {

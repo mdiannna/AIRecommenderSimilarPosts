@@ -166,6 +166,7 @@ $( "#imgSimForm" ).submit(function( event ) {
     $("#results").html("Loading... wait please");
 
     var token = "{{token}}";    
+    // console.log(token);
 
     $.ajaxSetup({
         headers: {
@@ -174,11 +175,13 @@ $( "#imgSimForm" ).submit(function( event ) {
     });
 
 
-    function showImages(image_paths, image_ids) {
+    function showSimilarImgs(image_paths, image_ids, scores_res) {
         console.log("show imgs", image_ids.length);
         for (var i=0; i<image_ids.length; i++) {
             $('#results').append('<img class ="img img-responsive"  style="width:13%" src="' + image_paths[i]+'" />');
-            $('#results').append('<span>' + image_ids[i] + '</span>');
+            // $('#results').append('<span>' + image_ids[i] + '</span>');
+            $('#results').append('<span>score: ' + scores_res[image_ids[i]] + '</span>');
+
         }
 
     }
@@ -202,6 +205,8 @@ $( "#imgSimForm" ).submit(function( event ) {
 
             var image_paths = Object.values(data.img_paths_map);
             var image_ids = Object.keys(data.img_paths_map)
+            var scores = data.results;
+
 
             console.log("img paths map", data.img_paths_map);
             console.log('image paths only:', image_paths);
@@ -212,9 +217,7 @@ $( "#imgSimForm" ).submit(function( event ) {
             // $("#results").html("Similarity score: " + data.similarity_score);
             // $("#results").html("Response " + data);
             $("#results").html("<p>Succes. Similar images:</p>");
-            showImages(image_paths, image_ids);
-
-
+            showSimilarImgs(image_paths, image_ids, scores);
 
         },
         error: function (error) {

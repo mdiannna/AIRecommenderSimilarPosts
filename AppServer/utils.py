@@ -37,3 +37,15 @@ def post_to_json(post_item):
     result['img_features'] = post_item.img_features
 
     return result
+
+
+def user_to_json(item):
+    result = {}
+    result['id'] = str(item.id)
+
+    # result['username'] = item.name #TODO: decis trebuie sau nu/?
+    result['name'] = item.name
+    result['password'] = str(len(item.password)) + " characters [hidden]"
+
+
+    return result
