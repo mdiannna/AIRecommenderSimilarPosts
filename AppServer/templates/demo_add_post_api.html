@@ -171,13 +171,12 @@ $( "#addPostForm" ).submit(function( event ) {
         url: url,
 
         success: function (data) {
-            $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
 
             console.log("succes:" + data);
             console.log("data sim:", data.similarity_score)
             console.log("succes:" + data.data);          
 
-            $("#results").html("Similarity score: " + data.similarity_score);
+            $("#results").html("Status: success. Post added");
 
 
         },

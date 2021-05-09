@@ -187,7 +187,7 @@ async def retrieve_user(request, payload, *args, **kwargs):
     if payload:
         user_id = payload.get('user_id', None)
         user = await User.find_one({'_id':ObjectId(user_id)})
-        return user
+        return user_to_json(user)
     else:
         return None
 
@@ -211,34 +211,59 @@ async def documentation(request):
     return jinja.render("documentation.html", request)
 
 
+async def get_demo_user():
+    """ create a demo user or get the created demo user and return """
+    user = await User.find_one({"name":"Xdemo_user"})
+    if user:
+        return user
+    #else
+    await User.insert_one({"name": "Xdemo_user", "password":"demo"})
+    user = await User.find_one({"name":"Xdemo_user"})
+    return user
+    
+
+
 # Method for testing get similar posts
 @app.route('/demo-similar-posts', methods=['GET'])
 async def demo_similar_posts(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_similar_posts_UI.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 # Method for testing similar pairs of images
 @app.route('/demo-similar-images', methods=['GET'])
 async def demo_similar_images(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_similar_images.html", request, token=str(demo_token))
 
 # Method for testing get similar images
 @app.route('/demo-get-similar-images', methods=['GET'])
 async def demo_get_similar_images(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_get_similar_images.html", request, token=str(demo_token))
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
 async def demo_text_info_extractor(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_text_extraction.html", request, token=str(demo_token))
 
 @app.route('/demo-ner', methods=['GET'])
 async def demo_ner(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_ner.html", request, token=str(demo_token))
+
+
+# Method for testing add post api (delete later if needed )TODO
+@app.route('/demo-add-post', methods=['GET'])
+async def demo_add_post(request):
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
+    return jinja.render("demo_add_post_api.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 
 @app.route('/ner-annotator', methods=['GET'])
@@ -246,12 +271,6 @@ async def ner_annotator(request):
     text = "test test hello lalala"
     return jinja.render("ner_annotator.html", request, text=text)
 
-
-# Method for testing add post api (delete later if needed )TODO
-@app.route('/demo-add-post', methods=['GET'])
-async def demo_add_post(request):
-    demo_token = await app.auth.generate_access_token(user={"user_id":-1, "username":"demo_user"})
-    return jinja.render("demo_add_post_api.html", request, greetings="Hello, sanic!", token=str(demo_token))
 
 
 # TODO
@@ -265,7 +284,8 @@ async def dashboard(request, user):
 
 @app.route('/api/post/create', methods=['POST'])
 @protected()
-async def make_post(request):
+@inject_user()
+async def make_post(request, user):
     #TODO: save & retrieve token of the user
     # {
     # '_id': "1242345345",
@@ -294,8 +314,9 @@ async def make_post(request):
     post_id_external = request.form['post_id'][0]
     post_text = request.form['text'][0]
     
-    username = "user1" #TODO: get this from token request!!! 
-    user_id = "1" #TODO: get this from token request!!!
+    print("user:", user)
+    username = user["name"]
+    user_id = user["id"]
 
     fields = {}    
     if 'fields' in request.args:
@@ -315,7 +336,7 @@ async def make_post(request):
     if upload_folder_name[-1]!="/":
         upload_folder_name += "/"
 
-    upload_folder_name += username + "/"
+    upload_folder_name += user_id+ "/"
 
     if not os.path.exists(upload_folder_name):
         os.makedirs(upload_folder_name)
@@ -329,7 +350,8 @@ async def make_post(request):
 
     await Post.insert_one(dict(
         post_id_external=str(post_id_external),
-        user_id='user' + user_id,
+        # user_id='user' + user_id,
+        user_id= user_id,
         img_path=img_path,
         text=post_text,
         fields=fields, #TODO:later check,
@@ -344,7 +366,8 @@ async def make_post(request):
 
 @app.route('/api/post/update', methods=['POST'])
 @protected()
-async def edit_post(request):
+@inject_user()
+async def edit_post(request, user):
     print("request args:", request.args)
     print("request form:", request.form)
 
@@ -364,12 +387,9 @@ async def edit_post(request):
     
     post_id = params['post_id']
 
-    # TODO: user_id real by token!!!
-    user_id = "user1"
-    username = "user1"
+    username = user["name"]
+    user_id = user["id"]
 
-    # post_to_upd = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
-    
 
     try:
         if 'image' in request.files:
@@ -382,7 +402,7 @@ async def edit_post(request):
             if upload_folder_name[-1]!="/":
                 upload_folder_name += "/"
 
-            upload_folder_name += username + "/"
+            upload_folder_name += user_id + "/"
 
             if not os.path.exists(upload_folder_name):
                 os.makedirs(upload_folder_name)
@@ -421,7 +441,8 @@ async def edit_post(request):
 
 @app.route('/api/post/read', methods=['GET'])
 @protected()
-async def read_post(request):
+@inject_user()
+async def read_post(request, user):
     params = []
 
     print("request args:", request.args)
@@ -441,7 +462,8 @@ async def read_post(request):
         post_id = str(params['post_id'])
 
         # TODO: user_id real by token!!!
-        user_id = "user1"
+        user_id = user["id"]
+        username = user["name"]
 
         post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
         if post:
@@ -460,7 +482,8 @@ async def read_post(request):
 
 @app.route('/api/post/delete', methods=['POST'])
 @protected()
-async def delete_post(request):
+@inject_user()
+async def delete_post(request, user):
     params = []
 
     print("request args:", request.args)
@@ -483,9 +506,7 @@ async def delete_post(request):
     try:
         post_id = str(params['post_id'])
 
-        # TODO: user_id real by token!!!
-        user_id = "user1"
-
+        user_id = user["id"]
 
         # result = await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
         result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
@@ -528,6 +549,7 @@ async def view_all_posts(request):
         # print(obj)
         
         results.append(post_to_json(obj))
+        # results.append(post_to_json(obj)["img_features"])
 
     #     obj.pop('_id')
     #     # if obj.student == student:
@@ -676,7 +698,8 @@ def allowed_file(filename, allowed_extensions):
 
 @app.route("/api/image-pairs-similarity", methods=['POST'])
 @protected()
-async def get_img_pairs_similarity(request):
+@inject_user()
+async def get_img_pairs_similarity(request, user):
     params = []
     
     if request.form:
@@ -716,8 +739,10 @@ async def get_img_pairs_similarity(request):
         if upload_folder_name[-1]!="/":
             upload_folder_name += "/"
 
+        username = user["name"]
+        user_id = user["id"]
         #add for demo user
-        upload_folder_name += "demo_user/demo/"
+        upload_folder_name += user_id + "/demo/"
 
         img_path1 = upload_folder_name+request.files["img1"][0].name
 
@@ -758,10 +783,11 @@ async def get_img_pairs_similarity(request):
     return response.json("TODO: compute similarity & return")
 
 
-@protected()
 @app.route('/api/get-similar-images', methods=['POST'])
+@protected()
+@inject_user()
 # @app.route('/api/get-similar-images')
-async def get_similar_images(request):
+async def get_similar_images(request, user):
     """ 
     Get n similar image to image included in request, returns n similar images
     The arguments should be "post_image" and "max_similar" (optional).
@@ -800,9 +826,9 @@ async def get_similar_images(request):
     if upload_folder_name[-1]!="/":
         upload_folder_name += "/"
 
-    #TODO!!! get user from token from request!!!
-    username = 'user1'
-    upload_folder_name += username + "/"
+    username = user["name"]
+    user_id = user["id"]
+    upload_folder_name += user_id + "/"
 
     if not os.path.exists(upload_folder_name):
         os.makedirs(upload_folder_name)
@@ -816,7 +842,7 @@ async def get_similar_images(request):
     
     print("img features:", imgFeatures)
 
-    filter = {"user_id":"user1"}
+    filter = {"user_id":user_id}
     # posts_cursor = await Post.find({"user_id":username}) #TODO: get only for the user!!!!
     # posts_cursor = await Post.find(filter=filter, limit=10) #TODO: get only for the user!!!!
     posts_cursor = await Post.find(filter=filter, limit=1000) #TODO: get only for the user!!!!
@@ -866,6 +892,7 @@ async def test_api_auth(request, user):
     # print("deleted:", result.deleted_count)
     # equivalent to drop:
     # await User.delete_many({})
+    # await Post.delete_many({})
     # return response.json("Hello!")
 
     return response.json({

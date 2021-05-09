@@ -158,6 +158,8 @@ class ImageSimilarity:
         print(np.array(imgs_features))
 
         imgs_features.append(base_img_features)
+        print("base img features:")
+        print(base_img_features)
 
         print("--")
         imgs_features = np.array(imgs_features)
@@ -178,6 +180,7 @@ class ImageSimilarity:
         df1 = df_similarity.sort_values('*base_img',ascending = False).head(max_similar_imgs+1).iloc[1:]
         df2 = df1[['*base_img']]
         dict_similarities = df2.to_dict()
+
 
         if "*base_img" in dict_similarities:
             return dict_similarities["*base_img"]
