@@ -14,7 +14,7 @@ import pprint
 import json
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
-from sanic_jwt.decorators import protected
+from sanic_jwt.decorators import protected, inject_user
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
@@ -30,7 +30,7 @@ from bson.json_util import dumps, loads
 from bson import json_util
 from bson.objectid import ObjectId
 
-from utils import post_to_json
+from utils import post_to_json, user_to_json
 import numpy as np
 
 app = Sanic(__name__)
@@ -126,40 +126,11 @@ async def login(request):
         user = await User.find_one({"name":username})
 
         print("user:", user)
-        # user = some_datastore.get(name=username)
         if user and check_password(user.password, password):
             auth.login_user(request, user)
-            # return response.redirect('/profile')
             return response.redirect('/dashboard')
 
-    # return response.html(HTML_LOGIN_FORM)
     return jinja.render("login.html", request)
-
-
-async def api_auth(request, *args, **kwargs):
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-
-    if not username or not password:
-        raise exceptions.AuthenticationFailed("Missing username or password.")
-
-    user = await User.find_one({"name":username})
-
-    
-    print("user:", user)
-    # user = some_datastore.get(name=username)
-    if user != None and check_password(user.password, password):
-        #temporary solution:
-        user_dict = {
-            "user_id": str(user.id),
-            "username": user.username,
-            "password": user.password
-        }
-        # auth.login_user(request, user)
-        return user_dict
-
-    raise exceptions.AuthenticationFailed("Wrong username or password.")
-    
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -188,6 +159,39 @@ async def register(request):
     return jinja.render("register.html", request)
 
 
+async def api_auth(request, *args, **kwargs):
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+
+    if not username or not password:
+        raise exceptions.AuthenticationFailed("Missing username or password.")
+
+    user = await User.find_one({"name":username})
+    
+    print("user:", user)
+    # user = some_datastore.get(name=username)
+    if user != None and check_password(user.password, password):
+        #temporary solution:
+        user_dict = {
+            "user_id": str(user.id),
+            "username": user.name,
+            "password": user.password
+        }
+        # auth.login_user(request, user)
+        return user_dict
+
+    raise exceptions.AuthenticationFailed("Wrong username or password.")
+
+    
+async def retrieve_user(request, payload, *args, **kwargs):
+    if payload:
+        user_id = payload.get('user_id', None)
+        user = await User.find_one({'_id':ObjectId(user_id)})
+        return user
+    else:
+        return None
+
+
 @app.route('/logout')
 @auth.login_required
 async def logout(request):
@@ -198,7 +202,6 @@ async def logout(request):
 @app.route('/profile')
 @auth.login_required(user_keyword='user')
 async def profile(request, user):
-
     print(colored(user, "red"))
 
     return jinja.render("profile.html", request, user=user.name)
@@ -255,6 +258,8 @@ async def demo_add_post(request):
 @app.route('/dashboard', methods=['GET'])
 @auth.login_required(user_keyword='user')
 async def dashboard(request, user):
+
+    print("user:", user)
     return jinja.render("dashboard.html", request, user=user.name)
 
 
@@ -551,6 +556,24 @@ async def view_all_posts(request):
     return response.json({"posts": results, "TODO":"TODO: Delete this route later!!!"})
 
 
+
+# Method for testing viewing all users, TODO: delete later!!!
+@app.route('/all-users', methods=['GET'])
+async def view_all_users(request):
+    # await User.delete_many({}) #works as drop
+
+    n = await User.count_documents({})
+    print('%s posts in collection' % n)
+
+    cursor = await User.find(sort='user_id')
+    
+    results = []
+    for obj in cursor.objects:
+        results.append(user_to_json(obj))
+
+    return response.json({"users": results, "TODO":"TODO: Delete this route later!!!"})
+
+
 #TODO!!!!!!!!!! test & finish
 # TODO: verificat daca nu trebuie sa fie sincron! si daca nu trebuie post!
 # TODO: need to be authorized from API
@@ -833,14 +856,30 @@ async def get_similar_images(request):
 # curl localhost:5005/api/test-iv -H "Authorization: Bearer eyJ0eXAiOiJKg02E" http:/localhost:5005/api/test-api
 @app.route("/api/test-api", methods=['POST', 'GET'])
 @protected() #can access route only with valid token
-async def test_api_auth(request):
+@inject_user()
+async def test_api_auth(request, user):
+
+    print("request:", request)
+    print("user:", user)
     # For deleting one post
     # result =await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
     # print("deleted:", result.deleted_count)
-    return response.json("Hello!")
+    # equivalent to drop:
+    # await User.delete_many({})
+    # return response.json("Hello!")
+
+    return response.json({
+        "parsed": True,
+        "url": request.url,
+        "query_string": request.query_string,
+        "args": request.args,
+        "query_args": request.query_args,
+        "data": request.form,
+        "json":request.json
+    })
 
 
-initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me')
+initialize(app, authenticate=api_auth, url_prefix='/api/auth', path_to_retrieve_user='/me', retrieve_user=retrieve_user)
 # https://sanic-jwt.readthedocs.io/en/latest/pages/endpoints.html
 # initialize(
 #     app,
