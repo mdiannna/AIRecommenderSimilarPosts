@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Index Page{% endblock %}
+{% block title %}Posts similarity demo{% endblock %}
 
 {% block styles%}
 <style>
@@ -54,7 +54,7 @@
 <!-- <p>Upload image, write text, click "Post"!</p> -->
 
 
-<form id="imgSimForm" action="/api/image-pairs-similarity" enctype=multipart/form-data>
+<form id="imgSimForm" action="/api/post-pairs-similarity" enctype=multipart/form-data>
     <div class="row">
         <div class="col-lg-6 mx-auto text-center">
 
@@ -98,7 +98,7 @@
 
             <div class="form-group">
                 <label for="post_text2" class="label">Text of the post:</label>
-                <textarea name="post_text1" id="post_text2" rows="6" class="form-control"></textarea>
+                <textarea name="post_text2" id="post_text2" rows="6" class="form-control"></textarea>
             </div>
 
         </div>
@@ -184,6 +184,13 @@ $( "#imgSimForm" ).submit(function( event ) {
     // var text = $form.find( "textarea[name='post_text']" ).val();
     var img_path1= infoArea.textContent;
     var img_path2= infoArea2.textContent;
+
+    var text1 = $form.find( "textarea[name='post_text1']" ).val();
+    var text2 = $form.find( "textarea[name='post_text2']" ).val();
+    console.log("text1:", text1);
+    console.log("text2:", text2);
+
+
     // alert(img_path1);
     console.log("files:", input.files[0]);
 
@@ -191,12 +198,14 @@ $( "#imgSimForm" ).submit(function( event ) {
     var url = $form.attr( "action" );
 
 
-
     var formData = new FormData();
 
     // // add assoc key values, this will be posts values
     formData.append("img1", input.files[0], input.files[0].name);
     formData.append("img2", input2.files[0], input2.files[0].name);
+    formData.append("text1", text1);
+    formData.append("text2", text2);
+
 
     formData.append("upload_file", true);
 
@@ -230,11 +239,12 @@ $( "#imgSimForm" ).submit(function( event ) {
             // your callback here
             $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
 
-            console.log("succes:" + data);
-            console.log("data sim:", data.similarity_score)
-            console.log("succes:" + data.data);          
+            console.log("succes:", data);
+            console.log("scores:", data.results)
+            // console.log("succes:" + data.data);          
 
-            $("#results").html("Similarity score: " + data.similarity_score);
+            // $("#results").html("Similarity score: " + data.similarity_score);
+            $("#results").html("Similarity scores: " + data.results);
 
 
         },

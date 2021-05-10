@@ -77,7 +77,7 @@ async def setup_db(app, loop):
     imgSim = ImageSimilarity() 
     # time.sleep(2)
     # TODO: fix problem of allocating ... for GPU twice
-    similarity = SimilarityAggregator(image_module=imgSim)
+    similarity = SimilarityAggregator(image_module=imgSim, text_module_config_path='configurations/config.xml')
 
 
 
@@ -785,9 +785,97 @@ async def get_img_pairs_similarity(request, user):
         #                                 filename=filename))
         # # return 
 
+    return response.json({"status": "error", "message":"Something went wrong"}, status=500)
 
 
-    return response.json("TODO: compute similarity & return")
+
+@app.route("/api/post-pairs-similarity", methods=['POST'])
+@protected()
+@inject_user()
+async def get_post_pairs_similarity(request, user):
+    params = []
+    
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message":"missing parameters img1 and img2 in request (request type should be json or multipart/form-data)"}, status=400)
+
+
+    # TODO: check
+    # allowed_extensions = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'img1' not in request.files or 'img2' not in request.files:
+            return response.json({"status":"error", "message":"no files for image1 and image2"}, status=400)
+            # flash('No file part')
+            # return redirect(request.url)
+
+        if 'text1' not in params or 'text2' not in params:
+            return response.json({"status":"error", "message":"missing parameters 'text1' and 'text2' in request"}, status=400)
+        
+
+        text1 = params['text1'][0]
+        text2 = params['text2'][0]
+
+        print("text1:", text1)
+        print("text2:", text2)
+
+    
+        # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
+        upload_folder_name = app.config.UPLOAD_FOLDER
+        if not os.path.exists(upload_folder_name):
+            os.makedirs(upload_folder_name)
+
+
+        print("upload_folder_name:", upload_folder_name)
+        if upload_folder_name[-1]!="/":
+            upload_folder_name += "/"
+
+        username = user["name"]
+        user_id = user["id"]
+        #add for demo user
+        upload_folder_name += user_id + "/demo/"
+
+        if not os.path.exists(upload_folder_name):
+            os.makedirs(upload_folder_name)
+
+        img_path1 = upload_folder_name+request.files["img1"][0].name
+
+        async with aiofiles.open(img_path1, 'wb') as f:
+            await f.write(request.files["img1"][0].body)
+
+        img_path2 = upload_folder_name+request.files["img2"][0].name
+
+        async with aiofiles.open(img_path2, 'wb') as f:
+            await f.write(request.files["img2"][0].body)
+        
+        print("img path1:", img_path1)
+        print("img path2:", img_path2)
+
+
+        try:
+            # TODO: make async???
+            scores = similarity.calc_similarity(text1, img_path1, text2, img_path2, extended_result=True)
+        
+            print("scores:", scores)
+
+            if scores:
+                return response.json({"status": "success", "results": json.dumps(scores)})
+            
+        except Exception as e:
+            return response.json({"status": "error", "message":"Error: "  + str(e)}, status=500)
+
+
+    return response.json({"status": "error", "message":"Something went wrong"}, status=500)
 
 
 @app.route('/api/get-similar-images', methods=['POST'])
