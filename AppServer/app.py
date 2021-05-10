@@ -749,9 +749,12 @@ async def get_img_pairs_similarity(request, user):
         #add for demo user
         upload_folder_name += user_id + "/demo/"
 
+        if not os.path.exists(upload_folder_name):
+            os.makedirs(upload_folder_name)
+
         img_path1 = upload_folder_name+request.files["img1"][0].name
 
-        async with aiofiles.open(upload_folder_name+request.files["img1"][0].name, 'wb') as f:
+        async with aiofiles.open(img_path1, 'wb') as f:
             await f.write(request.files["img1"][0].body)
 
         img_path2 = upload_folder_name+request.files["img2"][0].name
@@ -759,7 +762,6 @@ async def get_img_pairs_similarity(request, user):
         async with aiofiles.open(img_path2, 'wb') as f:
             await f.write(request.files["img2"][0].body)
         
-
         print("img path1:", img_path1)
         print("img path2:", img_path2)
 
