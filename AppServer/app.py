@@ -529,6 +529,11 @@ async def delete_post(request, user):
         return response.json({"status":"error", "message":str(e)}, status=500)
           
 
+# Method for deleting all posts, TODO: delete later!!!
+@app.route('/delete-all-posts', methods=['GET'])
+async def del_all_posts(request):
+    await Post.delete_many({}) #works as drop
+    return response.json({"message":"deleted all posts"})
 
 
 # Method for testing viewing all posts, TODO: delete later!!!
@@ -843,12 +848,8 @@ async def get_similar_images(request, user):
     print("img features:", imgFeatures)
 
     filter = {"user_id":user_id}
-    # posts_cursor = await Post.find({"user_id":username}) #TODO: get only for the user!!!!
-    # posts_cursor = await Post.find(filter=filter, limit=10) #TODO: get only for the user!!!!
-    posts_cursor = await Post.find(filter=filter, limit=1000) #TODO: get only for the user!!!!
-    json_data = []
+    posts_cursor = await Post.find(filter=filter, limit=1000)
     
-    # results = []
     all_imgs_features = {}
     all_img_paths = {}
 
@@ -857,13 +858,12 @@ async def get_similar_images(request, user):
         data = obj.img_features
         all_imgs_features[str(obj.id)] =  np.array(data)
 
+    if len(all_imgs_features)<1:
+        return response.json({"status":"error", "message":"No posts with images in database to compare"}, status=500)
 
     similarities = imgSim.get_similar_img_by_features(imgFeatures, all_imgs_features, max_similar_imgs=max_similar)
     
     if 'include_paths' in params:
-        # app.static("/images", "./images")
-
-        # image_paths_map = {"img_id":"img_path TODO"}
         image_paths_map = {}
 
         for img_id in list(similarities.keys()):

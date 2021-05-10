@@ -220,9 +220,10 @@ $( "#imgSimForm" ).submit(function( event ) {
             showSimilarImgs(image_paths, image_ids, scores);
 
         },
-        error: function (error) {
-            // handle error
-            $("#results").html("***error: "+error);
+        error: function (xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            // alert("Error. " + err.message);
+            $("#results").html("***error: "+error + ". <br>Message: " +  err.message);
             console.log("error:", error);
 
         },
