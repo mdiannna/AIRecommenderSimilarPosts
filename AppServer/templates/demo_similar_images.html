@@ -197,6 +197,15 @@ $( "#imgSimForm" ).submit(function( event ) {
 
     $("#results").html("Loading... wait please");
 
+    var token = "{{token}}";    
+
+    $.ajaxSetup({
+        headers: {
+            'Authorization' : "Bearer {{token}}"
+        }
+    });
+
+    
     $.ajax({
         type: "POST",
         url: url,

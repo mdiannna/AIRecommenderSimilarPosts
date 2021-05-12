@@ -5,9 +5,12 @@ from ImageSimilarityModule.imagesimilarity import ImageSimilarity
 
 class SimilarityAggregator():
     # TODO: add text config_path param to be used in text module when using this class
-    def __init__(self, weight_text='auto', weight_image='auto', text_module_config_path='configurations/config.xml'):
+    def __init__(self, weight_text='auto', weight_image='auto', text_module_config_path='configurations/config.xml', image_module=None):
         
-        self.img_module = ImageSimilarity() 
+        if image_module==None:
+            self.img_module = ImageSimilarity() 
+        else:
+            self.img_module = image_module
         self.text_module = TextModule(config_path=text_module_config_path)
 
         self.set_weights(weight_image, weight_text)        
@@ -73,6 +76,11 @@ class SimilarityAggregator():
         return aggregated_similarity
 
 
+    # #TODO; should include also existing fields!!!
+    # def get_similar_posts_by_features(img_features, text, max_similar_posts, all_img_features,fields=None):
+
+        
+    
     # imag_path & text params because post is not yet in the system
     def get_similar_posts(image_path, text, max_similar_posts):
         # TODO

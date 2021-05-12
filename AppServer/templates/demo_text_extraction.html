@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}IText info extraction{% endblock %}
+{% block title %}Text info extraction{% endblock %}
 
 {% block styles%}
 <style>
@@ -63,7 +63,7 @@
                 <label for="post_text" class="label">Text of the post:</label>
                 <textarea name="post_text" id="post_text" rows="6" class="form-control"></textarea>
             </div>
-       
+
             <button type="submit" class="btn btn-success ">Submit</button>
         </div>
     </div>
@@ -87,9 +87,25 @@
     var text = $form.find( "textarea[name='post_text']" ).val();
     var url = $form.attr( "action" );
         
-    data ={"token": "test-demo", "text": text};
+    // data ={"token": '{{token}}', "text": text};
+    data ={"text": text};
+    var token = "{{token}}";    
 
-    var posting = $.post( url, data );
+    $.ajaxSetup({
+        headers: {
+            'Authorization' : "Bearer {{token}}"
+        }
+    });
+
+    var posting = $.post( 
+        url, 
+        data=data,
+        headers = { 
+            'Authorization' : "Bearer {{token}}"
+        }
+    );
+
+    console.log(posting);
 
     // $.ajax({
     //     type: "POST",
@@ -102,10 +118,13 @@
 
       posting.done(function( data) {
           console.log("data:", data);
-          console.log("data res", data.result);
+          console.log("data res", data.fields);
 
-          if(data.result && data.result[1] =="success"){
-              fields = data.result[0];
+        //   if(data.result && data.result[1] =="success"){
+          if(data.fields && data.status =="success"){
+            //   fields = data.result[0];
+              fields = data.fields;
+
               console.log("---- Extracted fields:-----" )
               $("#results").html("");
               if (fields.length==0) {

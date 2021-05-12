@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
-
-
+import tensorflow as tf
+import pprint
 
 # TODO: do smth later
 class CustomException(Exception):
@@ -134,6 +134,62 @@ class ImageSimilarity:
 
     #TODO: se poate cu imgs_path,0 dar se poate sa fie in db undeva / dataframe cu image features extracted
     #TODO: ?? se poate de separat in  get_most_similar_from_path() si get_most_similar_from_db()
+    def get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3):
+        """ 
+        Get the most similar images to the base image by already extracted features
+            Parameters:
+            ----------
+                base_img_features (np array of float) - the image features extracted from a image
+                all_imgs_features (dict of {str: np array of float}) - img features extracted from all images, format {img_id: features}
+                max_similar_imgs (int) - how many top similar images to return (by default 3) 
+            Returns:
+            ----------
+                results (list of dictionaries) - a list of similar images with their similarity score, in the form
+                    [{img_id: score},  .... ] of max length max_similar_imgs
+        """
+
+        print("all_imgs_features:")
+        pprint.pprint(all_imgs_features)
+        
+        imgs_ids = list(all_imgs_features.keys())
+        imgs_ids.append('*base_img')
+        print("imgs ids:", imgs_ids)
+        imgs_features = list(all_imgs_features.values())
+        print(np.array(imgs_features))
+
+        imgs_features.append(base_img_features)
+        print("base img features:")
+        print(base_img_features)
+
+        print("--")
+        imgs_features = np.array(imgs_features)
+        print(imgs_features.shape)
+        # imgs_features.reshape()
+        imgs_features = np.squeeze(imgs_features)
+        print(imgs_features.shape)
+
+        # print(imgs_features)
+
+
+        #next step
+        df_similarity = self.calc_similarity_batch(imgs_features, imgs_ids, verbose=False)
+
+        print("df similarity:")
+        print(df_similarity.head())
+
+        df1 = df_similarity.sort_values('*base_img',ascending = False).head(max_similar_imgs+1).iloc[1:]
+        df2 = df1[['*base_img']]
+        dict_similarities = df2.to_dict()
+
+
+        if "*base_img" in dict_similarities:
+            return dict_similarities["*base_img"]
+
+        #TODO: try catch return errors???
+        return {}
+
+        
+
     def get_most_similar(self, base_img_path, imgs_path, max_similar_imgs=3):
         """ 
         Get the most similar images to the image specified in img_path
@@ -176,6 +232,15 @@ class ImageSimilarity:
                 model_name(str) - the name of the model to load
                 from_keras(bool) - specifies if the model loads from keras or not
         """
+
+        # https://stackoverflow.com/questions/51310257/tensorflow-gpu-python-resource-exhausted-error-in-cluster
+        # TF_CONFIG_ = tf.compat.v1.ConfigProto()
+        # TF_CONFIG_.gpu_options.allow_growth = True
+        # TF_CONFIG_.gpu_options.per_process_gpu_memory_fraction = 0.7
+
+        # sess = tf.compat.v1.Session(config = TF_CONFIG_)
+        # #######
+
         if from_keras==True and model_name.lower() =='vgg16':
             # load the model
             vgg_model = vgg16.VGG16(weights='imagenet')
@@ -205,6 +270,9 @@ class ImageSimilarity:
         returns:
             - img_features(np array) - array of numeric features extracted from image
         """
+        if model=='default':
+            model = self.model
+
 
         # load an image in PIL format
         original = load_img(img_path, target_size=(self.imgs_model_width, self.imgs_model_height))
