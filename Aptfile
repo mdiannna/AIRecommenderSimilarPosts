@@ -7,3 +7,6 @@ libgl1-mesa-dev
 libopenblas-dev 
 liblapack-dev
 libblas-dev
+pkg-config 
+libhdf5-100 
+libhdf5-dev
