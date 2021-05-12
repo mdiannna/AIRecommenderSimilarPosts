@@ -39,7 +39,6 @@ app.config.AUTH_LOGIN_ENDPOINT = 'login'
 app.config.UPLOAD_FOLDER = 'images'
 
 
-
 CORS(app)
 
 # settings = dict(MOTOR_URI='mongodb://db-mongo:27018/service2-mongo-students',
