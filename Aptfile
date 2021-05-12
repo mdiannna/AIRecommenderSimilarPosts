@@ -6,3 +6,4 @@ libgl1
 libgl1-mesa-dev
 libopenblas-dev 
 liblapack-dev
+libblas-dev

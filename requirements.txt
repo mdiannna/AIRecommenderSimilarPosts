@@ -111,7 +111,7 @@ sanic-routing==0.6.2
 sanic-session==0.7.3
 scikit-image==0.18.1
 scikit-learn==0.24.1
-scipy==1.4.1
+scipy
 Send2Trash==1.5.0
 Shapely==1.7.1
 six==1.15.0
@@ -142,3 +142,5 @@ webencodings==0.5.1
 websockets==8.1
 Werkzeug==1.0.1
 wrapt==1.12.1
+gunicorn
+uvicorn
