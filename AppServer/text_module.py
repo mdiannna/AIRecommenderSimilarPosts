@@ -41,10 +41,12 @@ class TextModule:
                 intersect_cnt += 1
 
         union_cnt = len(entities1) + len(entities2) - intersect_cnt
-
-        jaccard_score = intersect_cnt / union_cnt
-
-        return jaccard_score
+        
+        if union_cnt>0:
+            jaccard_score = intersect_cnt / union_cnt
+            return jaccard_score    
+        else:
+            return 0
     
     def extract_fields(self, text, return_standardized=False):
         #TODO: impement combination of rule-based and NER with specified weights

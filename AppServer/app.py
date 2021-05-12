@@ -32,12 +32,15 @@ from bson.objectid import ObjectId
 
 from utils import post_to_json, user_to_json
 import numpy as np
+from sanic_cors import CORS, cross_origin
 
 app = Sanic(__name__)
 app.config.AUTH_LOGIN_ENDPOINT = 'login'
 app.config.UPLOAD_FOLDER = 'images'
 
 
+
+CORS(app)
 
 # settings = dict(MOTOR_URI='mongodb://db-mongo:27018/service2-mongo-students',
 #                 LOGO=None)
@@ -684,7 +687,7 @@ async def simple_text_extract(request):
         # print(colored("Extracted from config file:", "blue"), result)
 
         if result[1]=="success":
-            return response.json({"status":"success", "fields": result, "message":""})
+            return response.json({"status":"success", "fields": result[0], "message":""})
         else:
             print("Error: " + str(result))
             return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "fields": []}, status=500)
