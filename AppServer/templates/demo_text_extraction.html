@@ -118,10 +118,13 @@
 
       posting.done(function( data) {
           console.log("data:", data);
-          console.log("data res", data.result);
+          console.log("data res", data.fields);
 
-          if(data.result && data.result[1] =="success"){
-              fields = data.result[0];
+        //   if(data.result && data.result[1] =="success"){
+          if(data.fields && data.status =="success"){
+            //   fields = data.result[0];
+              fields = data.fields;
+
               console.log("---- Extracted fields:-----" )
               $("#results").html("");
               if (fields.length==0) {
