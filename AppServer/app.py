@@ -698,7 +698,6 @@ async def simple_text_extract(request):
     return response.json({"status":"error", "message":"Something went wrong with fields extraction from config file!", "fields": []}, status=500)
 
 
-
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
