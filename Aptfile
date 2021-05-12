@@ -10,3 +10,4 @@ libblas-dev
 pkg-config 
 libhdf5-100 
 libhdf5-dev
+python3-h5py
