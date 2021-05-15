@@ -228,15 +228,7 @@ $( "#imgSimForm" ).submit(function( event ) {
     $.ajax({
         type: "POST",
         url: url,
-        // xhr: function () {
-        //     var myXhr = $.ajaxSettings.xhr();
-        //     if (myXhr.upload) {
-        //         myXhr.upload.addEventListener('progress', that.progressHandling, false);
-        //     }
-        //     return myXhr;
-        // },
         success: function (data) {
-            // your callback here
             $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
 
             console.log("succes:", data);
@@ -259,22 +251,7 @@ $( "#imgSimForm" ).submit(function( event ) {
         cache: false,
         contentType: false,
         processData: false,
-        // timeout: 60000
     });
-
-    // $.ajax({
-    //     type: "POST",
-    //     url: "/api/text-extract",
-    //     data: data,
-    //     // success: success,
-    //     // dataType: dataType
-    //   });
-    // $("#results").html("***");
-
-    // posting.done(function( data) {
-    //     console.log("data:", data);
-    //     console.log("data res", data.result);
-    // });
 });
 
 </script>

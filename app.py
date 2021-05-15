@@ -72,7 +72,7 @@ imgSim = None
 similarity = None
 
 @app.listener('before_server_start')
-async def setup_db(app, loop):
+async def setup_similarity_modules(app, loop):
     global imgSim
     global similarity
     # init image similarity module class
