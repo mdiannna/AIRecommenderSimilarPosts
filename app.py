@@ -886,7 +886,7 @@ async def get_post_pairs_similarity(request, user):
 async def get_similar_images(request, user):
     """ 
     Get n similar image to image included in request, returns n similar images
-    The arguments should be "post_image" and "max_similar" (optional).
+    The arguments should be "image" and "max_similar" (optional).
     include_paths is opt parameters to return image paths for frontend as well
     If not included in request, max_similar is by default 3
     """
