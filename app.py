@@ -350,6 +350,21 @@ async def make_post(request, user):
 
     imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
+
+    #added text extraction & save fields to db
+    extractor = RuleBasedInformationExtractor()
+    
+    # TODO: add logs if needed
+    try:
+        result =  extractor.extract_fidels_from_config(post_text, 'TextExtractionRuleBased/configurations/config.xml', verbose=False)
+        fields = result[0]
+        print("extracted fields:", fields)
+        #TODO: aggregate fields from request with these fields somehow!!!!
+    except Exception as e:
+        print("Exception in text fields extraction")
+        #TODO: handle it
+
+        
     await Post.insert_one(dict(
         post_id_external=str(post_id_external),
         # user_id='user' + user_id,

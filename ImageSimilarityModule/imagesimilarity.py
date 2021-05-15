@@ -134,7 +134,7 @@ class ImageSimilarity:
 
     #TODO: se poate cu imgs_path,0 dar se poate sa fie in db undeva / dataframe cu image features extracted
     #TODO: ?? se poate de separat in  get_most_similar_from_path() si get_most_similar_from_db()
-    def get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3):
+    def get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3, return_df_similarity=False):
         """ 
         Get the most similar images to the base image by already extracted features
             Parameters:
@@ -173,6 +173,9 @@ class ImageSimilarity:
 
         #next step
         df_similarity = self.calc_similarity_batch(imgs_features, imgs_ids, verbose=False)
+
+        if return_df_similarity:
+            return df_similarity
 
         print("df similarity:")
         print(df_similarity.head())

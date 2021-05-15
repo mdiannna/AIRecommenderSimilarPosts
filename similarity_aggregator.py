@@ -82,15 +82,51 @@ class SimilarityAggregator():
         
     
     # imag_path & text params because post is not yet in the system
-    def get_similar_posts(image_path, text, max_similar_posts):
+    def get_similar_posts(self, image_path, text, max_similar_posts):
         # TODO
         print(colored("----Similarity Aggregator-----", "yellow"))
         
         print(colored("Image received:" + str(image_path), "blue"))
         print(colored("Text received:" + str(text), "blue"))
 
+
         raise NotImplementedError
         return {"result": "not yet implemented!"}
+
+    
+    #TODO: add fields extracted from text???
+    # def get_similar_posts_by_features(img_features, text, max_similar_posts):
+    # get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3)
+
+    def get_similar_posts_by_features(self, img_features, txt_fields, all_imgs_features, max_similar_posts=3, top_similar_imgs=100):
+        # TODO
+        print(colored("----Similarity Aggregator-----", "yellow"))
+        
+        print(colored("Img features:" + str(img_features), "blue"))
+        
+        print(colored("Text received:" + str(txt_fields), "blue"))
+
+
+        #TODO; add getMostSimilarTexts, sau texte care match cumva la anumite fielduri, sau doar delta most similar ca la imagini???
+
+        df_similar_images = self.img_module.get_similar_img_by_features(img_features, 
+                all_imgs_features, max_similar_imgs=top_similar_imgs, return_df_similarity=True)
+        
+        
+
+        # df1 = df_similarity.sort_values('*base_img',ascending = False).head(max_similar_imgs+1).iloc[1:]
+        # df2 = df1[['*base_img']]
+        # dict_similarities = df2.to_dict()
+
+        
+
+        #TODO: finish
+
+
+        raise NotImplementedError
+        return {"result": "not yet implemented!"}
+
+
 
 
     def set_weights(self, weight_text="auto", weight_image="auto"):
