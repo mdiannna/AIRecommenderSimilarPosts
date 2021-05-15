@@ -98,7 +98,7 @@ class SimilarityAggregator():
     # def get_similar_posts_by_features(img_features, text, max_similar_posts):
     # get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3)
 
-    def get_similar_posts_by_features(self, img_features, txt_fields, all_imgs_features, max_similar_posts=3, top_similar_imgs=100):
+    def get_similar_posts_by_features(self, img_features, txt_fields, all_imgs_features, all_txt_fields, max_similar_posts=3, top_similar_imgs=100, top_similar_texts=100):
         # TODO
         print(colored("----Similarity Aggregator-----", "yellow"))
         
@@ -108,11 +108,20 @@ class SimilarityAggregator():
 
 
         #TODO; add getMostSimilarTexts, sau texte care match cumva la anumite fielduri, sau doar delta most similar ca la imagini???
+        df_similar_texts = self.text_module.get_most_similar_by_fields(txt_fields, all_txt_fields, max_similar=top_similar_texts)
 
         #TODO: mai intai most similarl texts, pe urma most similar images care se includ in texte, add post ids!!!!!!!!
         df_similar_images = self.img_module.get_similar_img_by_features(img_features, 
                 all_imgs_features, max_similar_imgs=top_similar_imgs, return_df_similarity=True)
         
+        #lista de posts ids
+        df_indexes_img = df_similar_images.index
+        df_indexes_texts = df_similar_texts.index
+
+        # print("df indexes img:", df_indexes_img)
+        # print("df indexes texts:", df_indexes_texts)
+        #TODO: combine all in a single df, and add aggregated_score column, return top max_similar
+
         
 
         # df1 = df_similarity.sort_values('*base_img',ascending = False).head(max_similar_imgs+1).iloc[1:]
