@@ -324,8 +324,11 @@ async def make_post(request, user):
     user_id = user["id"]
 
     fields = {}    
-    if 'fields' in request.args:
-        fields = request.args['fields']
+    fields_external = {}    
+
+    if 'fields' in request.form:
+        print("fields:", request.form["fields"])
+        fields_external = request.form['fields']
 
     #upload image    
     if ('image' not in request.files) and ('image_link' not in request.form):
@@ -393,6 +396,7 @@ async def make_post(request, user):
         img_path=img_path,
         text=post_text,
         fields=fields, #TODO:later check,
+        fields_external=fields_external,
         img_features=imgFeatures.tolist()
         ))
 
