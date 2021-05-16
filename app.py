@@ -250,6 +250,21 @@ async def demo_get_similar_images(request):
     demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_get_similar_images.html", request, token=str(demo_token))
 
+# Method for testing get similar posts
+@app.route('/demo-get-similar-posts', methods=['GET'])
+async def demo_get_similar_posts(request):
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
+
+    demo_posts = []
+
+    posts_cursor = await Post.find(sort=[('id',-1)], limit=5)
+
+    for obj in posts_cursor.objects:        
+        demo_posts.append(post_to_json(obj))
+
+    return jinja.render("demo_get_similar_posts.html", request, token=str(demo_token), demo_posts=demo_posts)
+
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
 async def demo_text_info_extractor(request):
