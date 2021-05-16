@@ -739,6 +739,13 @@ async def get_similar_posts(request, user):
     
     username = user["name"]
     user_id = user["id"]
+
+    use_external_post_ids = True
+
+    if 'use_external_post_ids' in params:
+        # by default is True, can be changed by request
+        use_external_post_ids = params['use_external_post_ids']
+
     
 
     filter = {"user_id":user_id}
@@ -777,9 +784,13 @@ async def get_similar_posts(request, user):
         # result = similarity.get_similar_posts(post, n)
         # result = similarity.get_similar_posts(post_img, post_txt, max_similar)
         # result = similarity.get_similar_posts(post_id, all_posts_df, max_similar)
-        result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar)
+        # result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar, use_post_id_external=True)
+        # should be true if not to use local post ids 
+        result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar, use_post_id_external=use_external_post_ids)
+
 
         return response.json({"status":"success", "results": result["aggregated_similarity"]})
+        # return response.json({"status":"success", "results": result})
     except Exception as e:
     #     # TODO: log somewhere
     #     # return abort(500, str(e)) refactored

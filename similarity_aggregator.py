@@ -91,12 +91,16 @@ class SimilarityAggregator():
     # def get_similar_posts(self, image_path, text, max_similar_posts):
     # def get_similar_posts(self, post_id, other_posts_df, max_similar_posts):
     def get_similar_posts(self, post_df, other_posts_df, max_similar_posts=3, 
-                        top_similar_texts=1000, top_similar_imgs=1000, return_df_similarity=False):
+                        top_similar_texts=1000, top_similar_imgs=1000, return_df_similarity=False, use_post_id_external=False):
         # TODO
 
 
         other_posts_df[['fields']] = other_posts_df[['fields']].fillna("").apply(list)
         post_df[['fields']] = post_df[['fields']].fillna("").apply(list)
+
+
+        df_other_post_ids_external = other_posts_df[['post_id_external']]
+
 
         print(colored("----Similarity Aggregator-----", "yellow"))
         
@@ -157,11 +161,25 @@ class SimilarityAggregator():
         print(df_similar_merged.head(10))
 
         df_result = df_similar_merged.sort_values('aggregated_similarity',ascending = False).head(max_similar_posts)
+
         print("df_Result:")
         print(df_result)
+
+
+        if use_post_id_external:
+            df_result = df_result.merge(df_other_post_ids_external, left_index=True, right_index=True)
+            df_result = df_result.set_index("post_id_external")
+
+            print("df_Result:")
+            print(df_result)
+
+
         if return_df_similarity:
             return df_result
         
+        
+        # return df_result[['aggregated_similarity']].to_dict()
+
         return df_result[['aggregated_similarity']].to_dict()
 
 
