@@ -1,5 +1,6 @@
 import hashlib
 import pandas as pd
+import uuid
 
 def create_hash(password):
     return hashlib.md5(password.encode()).hexdigest()
@@ -93,3 +94,7 @@ def user_to_json(item):
 
 
     return result
+
+
+def create_unique_filename():
+    return str(uuid.uuid4())

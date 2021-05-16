@@ -21,7 +21,7 @@ import requests
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User, Post
-from utils import check_password, create_hash
+from utils import check_password, create_hash, create_unique_filename
 from sanic_jwt import exceptions
 from sanic_jwt import initialize
 
@@ -352,9 +352,12 @@ async def make_post(request, user):
 
     if 'image' in request.files:
         print("image found in request files")
-        img_path = upload_folder_name+request.files["image"][0].name
+        # img_path = upload_folder_name+request.files["image"][0].name
 
-        async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+        extension = "." + request.files["image"][0].name.rsplit(".")[-1]
+        img_path = upload_folder_name+ create_unique_filename() + extension
+
+        async with aiofiles.open(img_path, 'wb') as f:
             await f.write(request.files["image"][0].body)
     else:
         print("image link found in request")
@@ -366,11 +369,22 @@ async def make_post(request, user):
 
         # img_content = img_response.content
         # img_path = img_link.name
+        # img_path = upload_folder_name + 
 
-        file = open(upload_folder_name + "test.png", "wb")
+        try:
+            acceptable_extensions = [".png", ".jpg", ".jpeg"]
+            extension = "." + img_link.rsplit(".")[-1]
+            if extension.lower() not in acceptable_extensions:
+                raise Exception
+        except:
+            extension = ".jpg"
+        
+        img_path = upload_folder_name + create_unique_filename() + extension
+        # img_path = upload_folder_name + "test.png"
+
+        file = open(img_path, "wb")
         file.write(img_response.content)
         file.close()
-        img_path = upload_folder_name + "test.png"
 
     imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
@@ -453,8 +467,10 @@ async def edit_post(request, user):
 
             if 'image' in request.files:
                 img_path = upload_folder_name+request.files["image"][0].name
+                extension = "." + request.files["image"][0].name.rsplit(".")[-1]
+                img_path = upload_folder_name+ create_unique_filename() + extension
 
-                async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+                async with aiofiles.open(img_path, 'wb') as f:
                     await f.write(request.files["image"][0].body)
 
             elif 'image_link' in request.form:
@@ -463,12 +479,23 @@ async def edit_post(request, user):
                 img_link = request.form["image_link"][0]
                 print("img link:", img_link)
 
+                try:
+                    acceptable_extensions = [".png", ".jpg", ".jpeg"]
+                    extension = "." + img_link.rsplit(".")[-1]
+                    if extension.lower() not in acceptable_extensions:
+                        raise Exception
+                except:
+                    extension = ".jpg"
+                
+                img_path = upload_folder_name + create_unique_filename() + extension
+
                 img_response = requests.get(img_link)
 
                 # img_content = img_response.content
                 # img_path = img_link.name
-                img_path = upload_folder_name + "test2.png"
+                # img_path = upload_folder_name + "test2.png"
 
+                #add await ca mai sus??
                 file = open(img_path, "wb")
                 file.write(img_response.content)
                 file.close()
