@@ -773,18 +773,18 @@ async def get_similar_posts(request, user):
         max_similar = request.args['max_similar']
     
     # TODO
-    # try:
-    # result = similarity.get_similar_posts(post, n)
-    # result = similarity.get_similar_posts(post_img, post_txt, max_similar)
-    # result = similarity.get_similar_posts(post_id, all_posts_df, max_similar)
-    result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar)
+    try:
+        # result = similarity.get_similar_posts(post, n)
+        # result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+        # result = similarity.get_similar_posts(post_id, all_posts_df, max_similar)
+        result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar)
 
-    return response.json(result)
-    # except Exception as e:
+        return response.json({"status":"success", "results": result["aggregated_similarity"]})
+    except Exception as e:
     #     # TODO: log somewhere
     #     # return abort(500, str(e)) refactored
-    #     print("Error: " + str(e))
-    return response.json({"status":"error", "message":str(e)}, status=500)
+        print("Error: " + str(e))
+        return response.json({"status":"error", "message":str(e)}, status=500)
         
 
     return response.json("TODO: make post and save to db")

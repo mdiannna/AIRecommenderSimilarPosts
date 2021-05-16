@@ -90,7 +90,8 @@ class SimilarityAggregator():
     # imag_path & text params because post is not yet in the system
     # def get_similar_posts(self, image_path, text, max_similar_posts):
     # def get_similar_posts(self, post_id, other_posts_df, max_similar_posts):
-    def get_similar_posts(self, post_df, other_posts_df, max_similar_posts=3, top_similar_texts=1000, top_similar_imgs=1000):
+    def get_similar_posts(self, post_df, other_posts_df, max_similar_posts=3, 
+                        top_similar_texts=1000, top_similar_imgs=1000, return_df_similarity=False):
         # TODO
 
 
@@ -147,20 +148,21 @@ class SimilarityAggregator():
             
 
         df_similar_merged = df_similar_images.merge(df_similar_texts, left_index=True, right_index=True)
-        print("--- merged df:")
-        print(df_similar_merged.head(10))
+        # print("--- merged df:")
+        # print(df_similar_merged.head(10))
 
         print("--- merged df with aggregated:")
         df_similar_merged['aggregated_similarity'] = df_similar_merged.apply(
                             lambda x: self.aggregate_similarities(x['text_similarity'], x['image_similarity']), axis=1)
         print(df_similar_merged.head(10))
 
-
-
+        df_result = df_similar_merged.sort_values('aggregated_similarity',ascending = False).head(max_similar_posts)
+        print("df_Result:")
+        print(df_result)
+        if return_df_similarity:
+            return df_result
         
-        # # # #lista de posts ids
-        # df_indexes_img = df_similar_images.index
-        # df_indexes_texts = df_similar_texts.index
+        return df_result[['aggregated_similarity']].to_dict()
 
 
 
