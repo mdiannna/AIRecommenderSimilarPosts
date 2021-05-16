@@ -76,6 +76,12 @@ class SimilarityAggregator():
         return aggregated_similarity
 
 
+    def aggregate_similarities(self, text_similarity, img_similarity):
+        aggregated_similarity = self.__weight_image*img_similarity + self.__weight_text*text_similarity
+        return aggregated_similarity
+        
+
+
     # #TODO; should include also existing fields!!!
     # def get_similar_posts_by_features(img_features, text, max_similar_posts, all_img_features,fields=None):
 
@@ -143,6 +149,13 @@ class SimilarityAggregator():
         df_similar_merged = df_similar_images.merge(df_similar_texts, left_index=True, right_index=True)
         print("--- merged df:")
         print(df_similar_merged.head(10))
+
+        print("--- merged df with aggregated:")
+        df_similar_merged['aggregated_similarity'] = df_similar_merged.apply(
+                            lambda x: self.aggregate_similarities(x['text_similarity'], x['image_similarity']), axis=1)
+        print(df_similar_merged.head(10))
+
+
 
         
         # # # #lista de posts ids
