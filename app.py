@@ -773,12 +773,20 @@ async def get_similar_posts(request, user):
 
 
     # post = Post(post_img, post_txt)
-    
-    max_similar = 3 # default 3 similar posts maximum
+    max_similar = 3
 
-    if 'max_similar' in request.args:
-        max_similar = request.args['max_similar']
-    
+    if 'max_similar' in params:
+        if type(params['max_similar'])==list:
+            try:
+                max_similar = int(params['max_similar'][0])
+            except:
+                max_similar=3
+        else:
+            try:
+                max_similar = int(params['max_similar'])
+            except:
+                max_similar=3
+        
     # TODO
     try:
         # result = similarity.get_similar_posts(post, n)
