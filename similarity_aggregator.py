@@ -121,6 +121,7 @@ class SimilarityAggregator():
         # print("df indexes img:", df_indexes_img)
         # print("df indexes texts:", df_indexes_texts)
         #TODO: combine all in a single df, and add aggregated_score column, return top max_similar
+        # TODO:  put zero when missing a text or image index
 
         
 

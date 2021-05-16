@@ -1,4 +1,5 @@
 import hashlib
+import pandas as pd
 
 def create_hash(password):
     return hashlib.md5(password.encode()).hexdigest()
@@ -37,6 +38,25 @@ def post_to_json(post_item):
     result['img_features'] = post_item.img_features
 
     return result
+
+# # TODO: later all fields, not hard-coded
+# def post_to_df(post_item)   :
+#     result = {}
+#     # df = pd.DataFrame(data, columns=, indexes=)
+
+#     df = pd.DataFrame.from_records(data, columns=, indexes=[str(post_item.id)])
+
+
+#     result['id'] = str(post_item.id)
+#     result['post_id_external'] = post_item.post_id_external
+#     result['user_id'] = post_item.user_id
+#     result['img_path'] = post_item.img_path
+#     result['text'] = post_item.text
+#     result['fields'] = post_item.fields
+#     result['img_features'] = post_item.img_features
+
+#     return result
+
 
 
 def user_to_json(item):

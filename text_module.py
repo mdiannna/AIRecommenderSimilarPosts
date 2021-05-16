@@ -198,6 +198,7 @@ if __name__=="__main__":
     print("fields4:", fields4)
 
     ds = tm.get_most_similar_by_fields(fields1, [fields2,fields3,fields4], ["text2", "text3", "text4"])
+    # ds = tm.get_most_similar_by_fields(fields1, [fields2,fields3,fields4], ["id_post1", "id_post2", "id_post3"])
     print("dict sim:", ds)
 
     

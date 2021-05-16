@@ -15,6 +15,7 @@ import json
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
 from sanic_jwt.decorators import protected, inject_user
+import requests
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
@@ -210,6 +211,8 @@ async def profile(request, user):
 
 @app.route('/documentation')
 async def documentation(request):
+    # await User.delete_many({})
+    
     return jinja.render("documentation.html", request)
 
 
@@ -219,7 +222,7 @@ async def get_demo_user():
     if user:
         return user
     #else
-    await User.insert_one({"name": "Xdemo_user", "password":"demo"})
+    await User.insert_one({"name": "Xdemo_user", "password": create_hash("demo")})
     user = await User.find_one({"name":"Xdemo_user"})
     return user
     
@@ -325,8 +328,9 @@ async def make_post(request, user):
         fields = request.args['fields']
 
     #upload image    
-    if 'image' not in request.files:
-        return response.json({"status":"error", "message":"no files for image"}, status=400)
+    if ('image' not in request.files) and ('image_link' not in request.form):
+        print({"status":"error", "message":"no files for image"})
+        return response.json({"status":"error", "message":"no files for image and no image_link provided"}, status=400)
 
     # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
     upload_folder_name = app.config.UPLOAD_FOLDER
@@ -343,10 +347,27 @@ async def make_post(request, user):
     if not os.path.exists(upload_folder_name):
         os.makedirs(upload_folder_name)
 
-    img_path = upload_folder_name+request.files["image"][0].name
+    if 'image' in request.files:
+        print("image found in request files")
+        img_path = upload_folder_name+request.files["image"][0].name
 
-    async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
-        await f.write(request.files["image"][0].body)
+        async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+            await f.write(request.files["image"][0].body)
+    else:
+        print("image link found in request")
+
+        img_link = request.form["image_link"][0]
+        print("img link:", img_link)
+
+        img_response = requests.get(img_link)
+
+        # img_content = img_response.content
+        # img_path = img_link.name
+
+        file = open(upload_folder_name + "test.png", "wb")
+        file.write(img_response.content)
+        file.close()
+        img_path = upload_folder_name + "test.png"
 
     imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
@@ -376,7 +397,7 @@ async def make_post(request, user):
         ))
 
     #TODO: try catch for errors
-    return response.json({"status":"success", "message": "post succesfully created"})
+    return response.json({"status":"success", "message": "post succesfully created"}, status=200)
 
 
 
@@ -402,14 +423,16 @@ async def edit_post(request, user):
     if 'post_id' not in params:
         return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
     
-    post_id = params['post_id']
+    post_id = params['post_id'][0]
+
 
     username = user["name"]
     user_id = user["id"]
 
 
+
     try:
-        if 'image' in request.files:
+        if 'image' in request.files or 'image_link' in request.form:
             upload_folder_name = app.config.UPLOAD_FOLDER
 
             if not os.path.exists(upload_folder_name):
@@ -424,10 +447,29 @@ async def edit_post(request, user):
             if not os.path.exists(upload_folder_name):
                 os.makedirs(upload_folder_name)
 
-            img_path = upload_folder_name+request.files["image"][0].name
+            if 'image' in request.files:
+                img_path = upload_folder_name+request.files["image"][0].name
 
-            async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
-                await f.write(request.files["image"][0].body)
+                async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
+                    await f.write(request.files["image"][0].body)
+
+            elif 'image_link' in request.form:
+                print("image link found in request")
+
+                img_link = request.form["image_link"][0]
+                print("img link:", img_link)
+
+                img_response = requests.get(img_link)
+
+                # img_content = img_response.content
+                # img_path = img_link.name
+                img_path = upload_folder_name + "test2.png"
+
+                file = open(img_path, "wb")
+                file.write(img_response.content)
+                file.close()
+
+
 
             imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
@@ -521,12 +563,13 @@ async def delete_post(request, user):
         return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
 
     try:
-        post_id = str(params['post_id'])
+        post_id = str(params['post_id'][0])
 
         user_id = user["id"]
 
         # result = await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
-        result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
+        # result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
+        result = await Post.delete_one({'post_id_external': post_id, 'user_id':user_id})
         del_cnt = result.deleted_count
         print("deleted:", del_cnt)
 
@@ -535,7 +578,7 @@ async def delete_post(request, user):
             # TODO: check!! it will always be deleted one post (but need to verify in create not to be duplicate post ids for same user!!!)
             return response.json({"status":"success", "message": "deleted " + str(del_cnt) + " post(s) with id " + post_id})
         else:        
-            post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+            post = await Post.find_one(filter={'post_id_external': post_id, 'user_id':user_id})
             if post:
                 return response.json({"status":"error", "message": "post with id '" + post_id + "' not deleted. Something went wrong"}, status=500)
 
