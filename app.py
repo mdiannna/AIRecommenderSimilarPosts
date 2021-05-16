@@ -21,7 +21,7 @@ import requests
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User, Post
-from utils import check_password, create_hash, create_unique_filename
+from utils import check_password, create_hash, create_unique_filename, post_to_df
 from sanic_jwt import exceptions
 from sanic_jwt import initialize
 
@@ -33,6 +33,7 @@ from bson.objectid import ObjectId
 
 from utils import post_to_json, user_to_json
 import numpy as np
+import pandas as pd
 from sanic_cors import CORS, cross_origin
 
 app = Sanic(__name__)
@@ -697,23 +698,72 @@ async def view_all_users(request):
 # TODO: need to be authorized from API
 @app.route('/api/get-similar-posts', methods=['POST'])
 @protected()
-async def get_similar_posts(request):
+@inject_user()
+async def get_similar_posts(request, user):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
-    The arguments should be "post_image", "post_text" and "max_similar" (optional).
+    The arguments should be "post_id" and "max_similar" (optional).
     If not included in request, max_similar is by default 3
     """
 
-    if not 'post_image' in request.args:
-        return response.json({"status":"error", "message":'Must include the "post_image" as a parameter in request!'}, status=400)
-        # return abort(400, 'Must include the "post_image" as a parameter in request!') refactored
+    # if not 'post_image' in request.args:
+    #     return response.json({"status":"error", "message":'Must include the "post_image" as a parameter in request!'}, status=400)
+    #     # return abort(400, 'Must include the "post_image" as a parameter in request!') refactored
     
-    if not 'post_text' in request.args:
-        return response.json({"status":"error", "message":'Must include the "post_text" as a parameter in request!'}, status=400)
-        # return abort(400, 'Must include the "post_text" as a parameter in request!')
+    # if not 'post_text' in request.args:
+    #     return response.json({"status":"error", "message":'Must include the "post_text" as a parameter in request!'}, status=400)
+    #     # return abort(400, 'Must include the "post_text" as a parameter in request!')    
+    # post_img = request.args['post_image']
+    # post_txt = request.args['post_text']
+
+    params = []
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message": "request type should be json or multipart/form-data)"}, status=400)
+
+
+    if not 'post_id' in params:
+        return response.json({"status":"error", "message":'Must include the "post_id" as a parameter in request!'}, status=400)
     
-    post_img = request.args['post_image']
-    post_txt = request.args['post_text']
+    if type(params['post_id'])==list:
+        post_id = params['post_id'][0]
+    else:
+        post_id = params['post_id']
+    
+    username = user["name"]
+    user_id = user["id"]
+    
+
+    filter = {"user_id":user_id}
+
+    base_post = await Post.find_one(filter={"post_id_external": post_id}, limit=1)
+    print("base post:", base_post)
+
+    base_post_df = post_to_df(base_post)
+    print("base post df:", base_post_df)
+
+
+
+    posts_cursor = await Post.find(filter=filter, limit=1000)
+
+    all_posts_df = pd.DataFrame()
+
+    for obj in posts_cursor.objects:
+        df_obj = post_to_df(obj)
+        all_posts_df = all_posts_df.append(df_obj)
+
+    print("base post df:", base_post_df)
+
+    print("all posts df:")
+    print(all_posts_df.head())
+
 
     # post = Post(post_img, post_txt)
     
@@ -725,7 +775,9 @@ async def get_similar_posts(request):
     # TODO
     try:
         # result = similarity.get_similar_posts(post, n)
-        result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+        # result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+        # result = similarity.get_similar_posts(post_id, all_posts_df, max_similar)
+        result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar)
 
         return response.json(result)
     except Exception as e:

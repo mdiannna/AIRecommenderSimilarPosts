@@ -82,12 +82,73 @@ class SimilarityAggregator():
         
     
     # imag_path & text params because post is not yet in the system
-    def get_similar_posts(self, image_path, text, max_similar_posts):
+    # def get_similar_posts(self, image_path, text, max_similar_posts):
+    # def get_similar_posts(self, post_id, other_posts_df, max_similar_posts):
+    def get_similar_posts(self, post_df, other_posts_df, max_similar_posts=3, top_similar_texts=1000, top_similar_imgs=1000):
         # TODO
+
+
+        other_posts_df[['fields']] = other_posts_df[['fields']].fillna("").apply(list)
+        post_df[['fields']] = post_df[['fields']].fillna("").apply(list)
+
         print(colored("----Similarity Aggregator-----", "yellow"))
         
-        print(colored("Image received:" + str(image_path), "blue"))
-        print(colored("Text received:" + str(text), "blue"))
+        post_id = post_df['id'].to_numpy().flatten()[0]
+        print(colored("Post id received:" + str(post_df), "blue"))
+        print(colored("Post id received:" + str(post_id), "blue"))
+        print("other posts:")
+        print(other_posts_df.head())
+        print("columns:", other_posts_df.columns)
+
+        print("post df cols: ", post_df.columns )
+        base_fields = post_df['fields'].to_numpy().flatten()[0]
+        print(" *base fields:", base_fields)
+        print("**")
+        print(post_df['fields'])
+
+        # base_img_features = post_df['img_features'].to_numpy().flatten()[0]
+        base_img_features = post_df['img_features'].to_list()[0]
+
+        # all_txt_fields = other_posts_df['fields'].to_numpy().flatten()
+        all_txt_fields = other_posts_df['fields'].to_list()
+        # all_imgs_features = other_posts_df['img_features'].to_list()
+        # all_imgs_features = other_posts_df[['id','img_features']].set_index('id').T.to_dict('list')
+        all_imgs_features = dict(other_posts_df[['id','img_features']].values)
+
+        # print("all imgs features", all_imgs_features)
+        all_posts_ids = other_posts_df.index
+
+
+        df_similar_texts = self.text_module.get_most_similar_by_fields(base_fields, all_txt_fields, all_posts_ids, 
+                                        max_similar=top_similar_texts, return_df_similarity=True)
+
+        # rename similarity_score column to text similarity
+        df_similar_texts.rename(columns={"similarity_score":"text_similarity"}, inplace=True)
+        print("df similar texts type:", df_similar_texts)
+
+        # # #TODO: mai intai most similarl texts, pe urma most similar images care se includ in texte, add post ids!!!!!!!!
+        df_similar_images = self.img_module.get_similar_img_by_features(base_img_features, 
+                all_imgs_features, max_similar_imgs=top_similar_imgs, return_df_similarity=True, verbose=False)
+
+        df_similar_images = df_similar_images[['*base_img']]
+
+        # rename *base_img column to image similarity
+        df_similar_images.rename(columns={"*base_img":"image_similarity"}, inplace=True)
+        df_similar_images.drop("*base_img")
+        print("*df similar imgs:")
+        print(df_similar_images)
+        print("type:", type(df_similar_images))
+            
+
+        df_similar_merged = df_similar_images.merge(df_similar_texts, left_index=True, right_index=True)
+        print("--- merged df:")
+        print(df_similar_merged.head(10))
+
+        
+        # # # #lista de posts ids
+        # df_indexes_img = df_similar_images.index
+        # df_indexes_texts = df_similar_texts.index
+
 
 
         raise NotImplementedError
@@ -98,6 +159,7 @@ class SimilarityAggregator():
     # def get_similar_posts_by_features(img_features, text, max_similar_posts):
     # get_similar_img_by_features(self, base_img_features, all_imgs_features, max_similar_imgs=3)
 
+    # def get_similar_posts_by_features(self, img_features, txt_fields, all_imgs_features, all_txt_fields, max_similar_posts=3, top_similar_imgs=100, top_similar_texts=100):
     def get_similar_posts_by_features(self, img_features, txt_fields, all_imgs_features, all_txt_fields, max_similar_posts=3, top_similar_imgs=100, top_similar_texts=100):
         # TODO
         print(colored("----Similarity Aggregator-----", "yellow"))
