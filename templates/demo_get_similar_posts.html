@@ -59,7 +59,9 @@
         <div class="col-lg-4 mx-auto text-center">
             
             <div class="input-group">
-            <select class="select custom-select">
+            <select class="select custom-select" id="selectPost">
+                <option value="" selected>-</option>
+
             {% for post in demo_posts %}
                 <option value="{{post.id}}">{{post.post_id_external}} : {{post.text[:10]}}</option>
             {% endfor %}
@@ -118,9 +120,15 @@
 
 $('select').on('change', function() {
     var selected_post_id = this.value;
+    if (this.value=="") {
+        $("#postImg").attr("src", "#");
+        $("#postTxt").html("Please select post!<br>");
+        $("#postFields").empty();
+    }
+
     console.log("selected post with id:", selected_post_id);
     // console.log("{{demo_posts }}".replaceAll("&#39;", '"'));
-    var demo_posts = JSON.parse("{{demo_posts }}".replaceAll("&#39;", '"'));
+    var demo_posts = JSON.parse("{{demo_posts }}".replaceAll("&#39;", '"').replaceAll("None", "{}"));
 
     // console.log("demo_posts", demo_posts);
 
@@ -143,41 +151,52 @@ $('select').on('change', function() {
 });
 
 
+// TODO
+function showSimilarPosts(posts, scores_res) {
 
-function showSimilarImgs(image_paths, image_ids, scores_res) {
-        console.log("show imgs", image_ids.length);
-        for (var i=0; i<image_ids.length; i++) {
-            $('#results').append('<img class="img img-responsive img-fluid"  style="width:13%" src="' + image_paths[i]+'" />');
-            // $('#results').append('<span>' + image_ids[i] + '</span>');
-            $('#results').append('<span>score: ' + scores_res[image_ids[i]] + '</span>');
-
-        }
+    console.log("show posts", posts.length);
+    for (var i=0; i<posts.length; i++) {
+        post_id = posts[i].id;
+        $('#results').append('<img class="img img-responsive img-fluid"  style="width:13%" src="' + posts[i].img_path+'" />');
+        $('#results').append("<b>text:<b>" + posts[i].text +" ;   " );
+        $('#results').append("<b>fields:<b>" + JSON.stringify(posts[i].fields));
+        // $('#results').append('<span>' + image_ids[i] + '</span>');
+        $('#results').append('<span>score: ' + scores_res[post_id] + '</span>');
 
     }
 
+}
 
 
-$( "#imgSimForm" ).submit(function( event ) {
-    
+
+$("#imgSimForm").submit(function( event ) {
     // Stop form from submitting normally
     event.preventDefault();
+    
+    console.log("submit form!");
+    
+    var selected_post_id = $('#selectPost').val();
+    console.log("selected post id:", selected_post_id);
+    // alert(selected_post_id);
+    // return;
+    
     
     // Get some values from elements on the page:
     var $form = $( this );
     // var text = $form.find( "textarea[name='post_text']" ).val();
     // var img_path1= infoArea.textContent;
 
-    console.log("files:", input.files[0]);
     var url = $form.attr( "action" );
 
 
     var formData = new FormData();
 
     // // add assoc key values, this will be posts values
-    formData.append("image", input.files[0], input.files[0].name);
+    // formData.append("image", input.files[0], input.files[0].name);
 
-    formData.append("upload_file", true);
-    formData.append("include_paths", true);
+    formData.append("post_id", selected_post_id);
+    formData.append("use_external_post_ids", false);
+    formData.append("include_posts", true);
 
     // data ={"token": "test-demo", "text": text};
     // var formData = data;
@@ -204,30 +223,11 @@ $( "#imgSimForm" ).submit(function( event ) {
 
             console.log("succes:", data);
             console.log("results:", data.results);
-            var results = data.results;
-            // console.log(results.length);
-            console.log(Object.keys(results));
-
             
-            for(var i=0; i<results.length; i++){
-                console.log(results[i]);
-            }
+            // $("#results").html("<p>Succes. Similar posts:</p>" + JSON.stringify(data.results));
+            $("#results").html("<p>Succes. Similar posts:</p>");
 
-            var image_paths = Object.values(data.img_paths_map);
-            var image_ids = Object.keys(data.img_paths_map)
-            var scores = data.results;
-
-
-            console.log("img paths map", data.img_paths_map);
-            console.log('image paths only:', image_paths);
-
-            // console.log("data sim:", data.similarity_score)
-            // console.log("succes:" + data.data);          
-
-            // $("#results").html("Similarity score: " + data.similarity_score);
-            // $("#results").html("Response " + data);
-            $("#results").html("<p>Succes. Similar images:</p>");
-            showSimilarImgs(image_paths, image_ids, scores);
+            showSimilarPosts(data.posts, data.results);
 
         },
         error: function (xhr, status, error) {

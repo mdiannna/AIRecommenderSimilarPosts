@@ -258,7 +258,7 @@ async def demo_get_similar_posts(request):
 
     demo_posts = []
 
-    posts_cursor = await Post.find(sort=[('id',-1)], limit=5)
+    posts_cursor = await Post.find(filter={"user_id": str(user.id)}, sort=[('id',-1)], limit=5)
 
     for obj in posts_cursor.objects:        
         demo_posts.append(post_to_json(obj))
@@ -751,6 +751,11 @@ async def get_similar_posts(request, user):
         post_id = params['post_id'][0]
     else:
         post_id = params['post_id']
+
+    include_posts=False
+
+    if 'include_posts' in params:
+        include_posts = True if params['include_posts'][0].lower()=="true" else False    
     
     username = user["name"]
     user_id = user["id"]
@@ -759,21 +764,28 @@ async def get_similar_posts(request, user):
 
     if 'use_external_post_ids' in params:
         # by default is True, can be changed by request
-        use_external_post_ids = params['use_external_post_ids']
+        if type(params['use_external_post_ids'])==list:
+            use_external_post_ids = params['use_external_post_ids'][0]
+        else:
+            use_external_post_ids = params['use_external_post_ids']
+            
+        use_external_post_ids = False if use_external_post_ids.lower()=="false" else True 
+            
+    print("post id:", post_id)    
+    print("use external post ids:", use_external_post_ids)
 
-    
+    if use_external_post_ids:
+        base_post = await Post.find_one(filter={"post_id_external": post_id, "user_id":user_id})
+    else:
+        base_post = await Post.find_one(filter={"_id": ObjectId(post_id), "user_id":user_id})
 
-    filter = {"user_id":user_id}
-
-    base_post = await Post.find_one(filter={"post_id_external": post_id}, limit=1)
     print("base post:", base_post)
 
     base_post_df = post_to_df(base_post)
     print("base post df:", base_post_df)
 
 
-
-    posts_cursor = await Post.find(filter=filter, limit=1000)
+    posts_cursor = await Post.find(filter={"user_id":user_id}, limit=1000)
 
     all_posts_df = pd.DataFrame()
 
@@ -811,8 +823,37 @@ async def get_similar_posts(request, user):
         # should be true if not to use local post ids 
         result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar, use_post_id_external=use_external_post_ids)
 
+        if include_posts:
+            post_ids = result["aggregated_similarity"].keys()
+            
+            if use_external_post_ids:
+                filter = {
+                    "post_id_external": {"$in": post_ids},
+                    "user_id": user_id
+                }
+            else:
+                filter = {
+                    "_id": {"$in": [ObjectId(id) for id in post_ids]},
+                    "user_id": user_id
+                }
+            
+            posts_cursor = await Post.find(filter=filter, limit=1000)
+            posts = []    
 
-        return response.json({"status":"success", "results": result["aggregated_similarity"]})
+            for obj in posts_cursor.objects:
+                post = post_to_json(obj)
+                posts.append(post)
+                # posts.append(
+                # {"img_path": obj.img_path,
+                # "id": str(obj.id),
+                # "text": obj.text,
+                # "fields":obj.fields
+                # })
+            
+            return response.json({"status":"success", "results": result["aggregated_similarity"], "posts":posts})
+
+        else:
+            return response.json({"status":"success", "results": result["aggregated_similarity"]})
         # return response.json({"status":"success", "results": result})
     except Exception as e:
     #     # TODO: log somewhere
