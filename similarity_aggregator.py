@@ -160,7 +160,7 @@ class SimilarityAggregator():
                             lambda x: self.aggregate_similarities(x['text_similarity'], x['image_similarity']), axis=1)
         print(df_similar_merged.head(10))
 
-        df_result = df_similar_merged.sort_values('aggregated_similarity',ascending = False).head(max_similar_posts)
+        df_result = df_similar_merged.sort_values('aggregated_similarity',ascending = False).head(max_similar_posts+1).iloc[1:]
 
         print("df_Result:")
         print(df_result)

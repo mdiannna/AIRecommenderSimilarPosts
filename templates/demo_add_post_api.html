@@ -153,7 +153,15 @@ $( "#addPostForm" ).submit(function( event ) {
     formData.append("image", input.files[0], input.files[0].name);
     formData.append("upload_file", true);
     formData.append("text", text);
-    formData.append("post_id", 1);
+    var demo_post_id = "{{demo_id}}";
+    // alert(demo_post_id);
+
+    if (typeof demo_post_id!=='undefined') {
+        formData.append("post_id", demo_post_id);        
+    }
+    else {
+        formData.append("post_id", 1);        
+    }
 
     $("#results").html("Loading... wait please");
 

@@ -105,3 +105,8 @@ def user_to_json(item):
 
 def create_unique_filename():
     return str(uuid.uuid4())
+
+
+
+def create_unique_id():
+    return str(uuid.uuid4())

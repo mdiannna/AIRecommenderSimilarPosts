@@ -50,7 +50,7 @@
 
 {% block body %}
 
-<h1 class="ui header text-center mb-4">Get similar posts for a post demo</h1>
+<h3 class="ui header text-center mb-4">Get similar posts for a post demo</h3>
 <!-- <p>Upload image, write text, click "Post"!</p> -->
 
 
@@ -63,38 +63,29 @@
                 <option value="" selected>-</option>
 
             {% for post in demo_posts %}
-                <option value="{{post.id}}">{{post.post_id_external}} : {{post.text[:10]}}</option>
+                <!-- <option value="{{post.id}}">{{post.post_id_external}} : {{post.text[:30]}}</option> -->
+                <option value="{{post.id}}">{{post.text[:50]}}</option>
             {% endfor %}
             </select>
         </div>
-
-
-        <div class="image-area mt-4">
-            <img id="postImg" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block">
-        </div>
-
-        <div id="postTxt">
-
-        </div>
-        <div id="postFields">
-
         </div>
 
 
-
-
-            <!-- {% for post in demo_posts %}
-            <p>id: {{ post.id}}</p>
-            <p>img path: {{post.img_path}}</p>
-            <img src="{{post.img_path}}" class="img-responsive img img-fluid">
-            <p>text: {{post.text}}</p>
-            <p>fields: {{post.fields}}</p>
-            {% endfor %} -->
-
+        <div class="row">
+            <div class="col-md-4 image-area">
+                <img id="postImg" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block" style="max-width: 200px">
+            </div>
+            <div id="postTxt" class="col-md-4 pt-2">
 
             </div>
+
+            <div id="postFields" class="col-md-4 pt-2">
+
+            </div>
+        </div>
+      
     </div>
-    <div class="row">
+    <div class="row pt-4">
         
         <div class="col-lg-4 mx-auto text-center">
 
@@ -127,8 +118,10 @@ $('select').on('change', function() {
     }
 
     console.log("selected post with id:", selected_post_id);
+
+    console.log("unparsed demo posts:",  "{{demo_posts }}".replaceAll("&#39;", '"').replaceAll("None", "{}").replaceAll("\n", " "));
     // console.log("{{demo_posts }}".replaceAll("&#39;", '"'));
-    var demo_posts = JSON.parse("{{demo_posts }}".replaceAll("&#39;", '"').replaceAll("None", "{}"));
+    var demo_posts = JSON.parse("{{demo_posts }}".replaceAll("&#39;", '"').replaceAll("None", "{}").replaceAll("\n", " "));
 
     // console.log("demo_posts", demo_posts);
 
@@ -155,14 +148,28 @@ $('select').on('change', function() {
 function showSimilarPosts(posts, scores_res) {
 
     console.log("show posts", posts.length);
-    for (var i=0; i<posts.length; i++) {
-        post_id = posts[i].id;
+
+    // var selected_post = demo_posts.filter(obj => {
+    //     return obj.id === selected_post_id
+    // })[0];
+
+    // for (var i=0; i<scores_res.length; i++) {
+
+    for (const [key, score] of Object.entries(scores_res)) {
+        console.log(`${key}: ${score}`);
+        
+        var post = posts.filter(obj => {
+            return obj.id === key
+        })[0];
+        
+        post_id = post.id;
 
         var code = '<div class="col-md-4 text-center">' 
-            + '<img class="img img-responsive img-fluid text-center"   style="width:50%" src="' + posts[i].img_path + '"> <br>' 
-            + '<span><b>text:</b>' + posts[i].text +' </span>' 
-            + '<p><b>fields:</b>' + JSON.stringify(posts[i].fields) + '</p>'
-            + '<p><b>score:</b> ' + scores_res[post_id] + '</span>' 
+            + '<img class="img img-responsive img-fluid text-center"   style="width:50%" src="' + post.img_path + '"> <br>' 
+            + '<span><b>text:</b>' + post.text +' </span>' 
+            + '<p><b>fields:</b>' + JSON.stringify(post.fields) + '</p>'
+            // + '<p><b>score:</b> ' + scores_res[post_id] + '</span>' 
+            + '<p><b>score:</b> ' + score + '</span>' 
             + '</div> ';
         
             $('#results').append(code);

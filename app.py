@@ -21,7 +21,7 @@ import requests
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User, Post
-from utils import check_password, create_hash, create_unique_filename, post_to_df
+from utils import check_password, create_hash, create_unique_filename, post_to_df, create_unique_id
 from sanic_jwt import exceptions
 from sanic_jwt import initialize
 
@@ -258,7 +258,7 @@ async def demo_get_similar_posts(request):
 
     demo_posts = []
 
-    posts_cursor = await Post.find(filter={"user_id": str(user.id)}, sort=[('id',-1)], limit=5)
+    posts_cursor = await Post.find(filter={"user_id": str(user.id)}, sort=[('id',-1)], limit=20)
 
     for obj in posts_cursor.objects:        
         demo_posts.append(post_to_json(obj))
@@ -284,7 +284,8 @@ async def demo_ner(request):
 async def demo_add_post(request):
     user = await get_demo_user()
     demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
-    return jinja.render("demo_add_post_api.html", request, greetings="Hello, sanic!", token=str(demo_token))
+    demo_id = create_unique_id()
+    return jinja.render("demo_add_post_api.html", request, greetings="Hello, sanic!", token=str(demo_token), demo_id=demo_id)
 
 
 @app.route('/ner-annotator', methods=['GET'])
