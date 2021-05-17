@@ -137,7 +137,6 @@ class SimilarityAggregator():
         df_similar_texts.rename(columns={"similarity_score":"text_similarity"}, inplace=True)
         print("df similar texts type:", df_similar_texts)
 
-        # # #TODO: mai intai most similarl texts, pe urma most similar images care se includ in texte, add post ids!!!!!!!!
         df_similar_images = self.img_module.get_similar_img_by_features(base_img_features, 
                 all_imgs_features, max_similar_imgs=top_similar_imgs, return_df_similarity=True, verbose=False)
 
