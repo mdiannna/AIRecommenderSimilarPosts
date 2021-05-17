@@ -15,12 +15,13 @@ import json
 from similarity_aggregator import SimilarityAggregator
 from sanic_session import InMemorySessionInterface
 from sanic_jwt.decorators import protected, inject_user
+import requests
 
 # https://sanic-auth.readthedocs.io/en/latest/
 from sanic_auth import Auth
 from sanic_motor import BaseModel
 from models import User, Post
-from utils import check_password, create_hash
+from utils import check_password, create_hash, create_unique_filename, post_to_df
 from sanic_jwt import exceptions
 from sanic_jwt import initialize
 
@@ -32,6 +33,7 @@ from bson.objectid import ObjectId
 
 from utils import post_to_json, user_to_json
 import numpy as np
+import pandas as pd
 from sanic_cors import CORS, cross_origin
 
 app = Sanic(__name__)
@@ -210,6 +212,8 @@ async def profile(request, user):
 
 @app.route('/documentation')
 async def documentation(request):
+    # await User.delete_many({})
+    
     return jinja.render("documentation.html", request)
 
 
@@ -219,7 +223,7 @@ async def get_demo_user():
     if user:
         return user
     #else
-    await User.insert_one({"name": "Xdemo_user", "password":"demo"})
+    await User.insert_one({"name": "Xdemo_user", "password": create_hash("demo")})
     user = await User.find_one({"name":"Xdemo_user"})
     return user
     
@@ -245,6 +249,21 @@ async def demo_get_similar_images(request):
     user = await get_demo_user()
     demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
     return jinja.render("demo_get_similar_images.html", request, token=str(demo_token))
+
+# Method for testing get similar posts
+@app.route('/demo-get-similar-posts', methods=['GET'])
+async def demo_get_similar_posts(request):
+    user = await get_demo_user()
+    demo_token = await app.auth.generate_access_token(user={"user_id": str(user.id), "username":user.name})
+
+    demo_posts = []
+
+    posts_cursor = await Post.find(filter={"user_id": str(user.id)}, sort=[('id',-1)], limit=5)
+
+    for obj in posts_cursor.objects:        
+        demo_posts.append(post_to_json(obj))
+
+    return jinja.render("demo_get_similar_posts.html", request, token=str(demo_token), demo_posts=demo_posts)
 
 # Method for testing Named Entity Recognition (NER)
 @app.route('/demo-text-info-extractor', methods=['GET'])
@@ -321,12 +340,16 @@ async def make_post(request, user):
     user_id = user["id"]
 
     fields = {}    
-    if 'fields' in request.args:
-        fields = request.args['fields']
+    fields_external = {}    
+
+    if 'fields' in request.form:
+        print("fields:", request.form["fields"])
+        fields_external = request.form['fields']
 
     #upload image    
-    if 'image' not in request.files:
-        return response.json({"status":"error", "message":"no files for image"}, status=400)
+    if ('image' not in request.files) and ('image_link' not in request.form):
+        print({"status":"error", "message":"no files for image"})
+        return response.json({"status":"error", "message":"no files for image and no image_link provided"}, status=400)
 
     # useful resource: https://stackoverflow.com/questions/48930245/how-to-perform-file-upload-in-sanic
     upload_folder_name = app.config.UPLOAD_FOLDER
@@ -343,13 +366,59 @@ async def make_post(request, user):
     if not os.path.exists(upload_folder_name):
         os.makedirs(upload_folder_name)
 
-    img_path = upload_folder_name+request.files["image"][0].name
+    if 'image' in request.files:
+        print("image found in request files")
+        # img_path = upload_folder_name+request.files["image"][0].name
 
-    async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
-        await f.write(request.files["image"][0].body)
+        extension = "." + request.files["image"][0].name.rsplit(".")[-1]
+        img_path = upload_folder_name+ create_unique_filename() + extension
+
+        async with aiofiles.open(img_path, 'wb') as f:
+            await f.write(request.files["image"][0].body)
+    else:
+        print("image link found in request")
+
+        img_link = request.form["image_link"][0]
+        print("img link:", img_link)
+
+        img_response = requests.get(img_link)
+
+        # img_content = img_response.content
+        # img_path = img_link.name
+        # img_path = upload_folder_name + 
+
+        try:
+            acceptable_extensions = [".png", ".jpg", ".jpeg"]
+            extension = "." + img_link.rsplit(".")[-1]
+            if extension.lower() not in acceptable_extensions:
+                raise Exception
+        except:
+            extension = ".jpg"
+        
+        img_path = upload_folder_name + create_unique_filename() + extension
+        # img_path = upload_folder_name + "test.png"
+
+        file = open(img_path, "wb")
+        file.write(img_response.content)
+        file.close()
 
     imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
+
+    #added text extraction & save fields to db
+    extractor = RuleBasedInformationExtractor()
+    
+    # TODO: add logs if needed
+    try:
+        result =  extractor.extract_fidels_from_config(post_text, 'TextExtractionRuleBased/configurations/config.xml', verbose=False)
+        fields = result[0]
+        print("extracted fields:", fields)
+        #TODO: aggregate fields from request with these fields somehow!!!!
+    except Exception as e:
+        print("Exception in text fields extraction")
+        #TODO: handle it
+
+        
     await Post.insert_one(dict(
         post_id_external=str(post_id_external),
         # user_id='user' + user_id,
@@ -357,11 +426,12 @@ async def make_post(request, user):
         img_path=img_path,
         text=post_text,
         fields=fields, #TODO:later check,
+        fields_external=fields_external,
         img_features=imgFeatures.tolist()
         ))
 
     #TODO: try catch for errors
-    return response.json({"status":"success", "message": "post succesfully created"})
+    return response.json({"status":"success", "message": "post succesfully created"}, status=200)
 
 
 
@@ -387,14 +457,16 @@ async def edit_post(request, user):
     if 'post_id' not in params:
         return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
     
-    post_id = params['post_id']
+    post_id = params['post_id'][0]
+
 
     username = user["name"]
     user_id = user["id"]
 
 
+
     try:
-        if 'image' in request.files:
+        if 'image' in request.files or 'image_link' in request.form:
             upload_folder_name = app.config.UPLOAD_FOLDER
 
             if not os.path.exists(upload_folder_name):
@@ -409,10 +481,42 @@ async def edit_post(request, user):
             if not os.path.exists(upload_folder_name):
                 os.makedirs(upload_folder_name)
 
-            img_path = upload_folder_name+request.files["image"][0].name
+            if 'image' in request.files:
+                img_path = upload_folder_name+request.files["image"][0].name
+                extension = "." + request.files["image"][0].name.rsplit(".")[-1]
+                img_path = upload_folder_name+ create_unique_filename() + extension
 
-            async with aiofiles.open(upload_folder_name+request.files["image"][0].name, 'wb') as f:
-                await f.write(request.files["image"][0].body)
+                async with aiofiles.open(img_path, 'wb') as f:
+                    await f.write(request.files["image"][0].body)
+
+            elif 'image_link' in request.form:
+                print("image link found in request")
+
+                img_link = request.form["image_link"][0]
+                print("img link:", img_link)
+
+                try:
+                    acceptable_extensions = [".png", ".jpg", ".jpeg"]
+                    extension = "." + img_link.rsplit(".")[-1]
+                    if extension.lower() not in acceptable_extensions:
+                        raise Exception
+                except:
+                    extension = ".jpg"
+                
+                img_path = upload_folder_name + create_unique_filename() + extension
+
+                img_response = requests.get(img_link)
+
+                # img_content = img_response.content
+                # img_path = img_link.name
+                # img_path = upload_folder_name + "test2.png"
+
+                #add await ca mai sus??
+                file = open(img_path, "wb")
+                file.write(img_response.content)
+                file.close()
+
+
 
             imgFeatures = imgSim.extract_features(model='default', img_path=img_path)
 
@@ -506,12 +610,13 @@ async def delete_post(request, user):
         return response.json({"status":"error", "message":"missing post_id parameter in request"}, status=400)
 
     try:
-        post_id = str(params['post_id'])
+        post_id = str(params['post_id'][0])
 
         user_id = user["id"]
 
         # result = await Post.delete_one({"_id": ObjectId("60893650c60ce38197f4e58b")})
-        result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
+        # result = await Post.delete_one({'post_id_external':post_id, 'user_id':user_id})
+        result = await Post.delete_one({'post_id_external': post_id, 'user_id':user_id})
         del_cnt = result.deleted_count
         print("deleted:", del_cnt)
 
@@ -520,7 +625,7 @@ async def delete_post(request, user):
             # TODO: check!! it will always be deleted one post (but need to verify in create not to be duplicate post ids for same user!!!)
             return response.json({"status":"success", "message": "deleted " + str(del_cnt) + " post(s) with id " + post_id})
         else:        
-            post = await Post.find_one(filter={'post_id_external':post_id, 'user_id':user_id})
+            post = await Post.find_one(filter={'post_id_external': post_id, 'user_id':user_id})
             if post:
                 return response.json({"status":"error", "message": "post with id '" + post_id + "' not deleted. Something went wrong"}, status=500)
 
@@ -608,40 +713,151 @@ async def view_all_users(request):
 # TODO: need to be authorized from API
 @app.route('/api/get-similar-posts', methods=['POST'])
 @protected()
-async def get_similar_posts(request):
+@inject_user()
+async def get_similar_posts(request, user):
     """ 
     Get n similar posts to the post (image and text) included in request, returns n similar posts
-    The arguments should be "post_image", "post_text" and "max_similar" (optional).
+    The arguments should be "post_id" and "max_similar" (optional).
     If not included in request, max_similar is by default 3
     """
 
-    if not 'post_image' in request.args:
-        return response.json({"status":"error", "message":'Must include the "post_image" as a parameter in request!'}, status=400)
-        # return abort(400, 'Must include the "post_image" as a parameter in request!') refactored
+    # if not 'post_image' in request.args:
+    #     return response.json({"status":"error", "message":'Must include the "post_image" as a parameter in request!'}, status=400)
+    #     # return abort(400, 'Must include the "post_image" as a parameter in request!') refactored
     
-    if not 'post_text' in request.args:
-        return response.json({"status":"error", "message":'Must include the "post_text" as a parameter in request!'}, status=400)
-        # return abort(400, 'Must include the "post_text" as a parameter in request!')
+    # if not 'post_text' in request.args:
+    #     return response.json({"status":"error", "message":'Must include the "post_text" as a parameter in request!'}, status=400)
+    #     # return abort(400, 'Must include the "post_text" as a parameter in request!')    
+    # post_img = request.args['post_image']
+    # post_txt = request.args['post_text']
+
+    params = []
+    if request.form:
+        type_request = "FORM"
+        params = request.form
+        print(colored("form:","yellow"), request.form)
+    elif request.json:
+        params = request.json
+        type_request = "JSON"
+        print(colored("json:", "yellow"), request.json)
+    else:
+        return response.json({"status":"error", "message": "request type should be json or multipart/form-data)"}, status=400)
+
+
+    if not 'post_id' in params:
+        return response.json({"status":"error", "message":'Must include the "post_id" as a parameter in request!'}, status=400)
     
-    post_img = request.args['post_image']
-    post_txt = request.args['post_text']
+    if type(params['post_id'])==list:
+        post_id = params['post_id'][0]
+    else:
+        post_id = params['post_id']
+
+    include_posts=False
+
+    if 'include_posts' in params:
+        include_posts = True if params['include_posts'][0].lower()=="true" else False    
+    
+    username = user["name"]
+    user_id = user["id"]
+
+    use_external_post_ids = True
+
+    if 'use_external_post_ids' in params:
+        # by default is True, can be changed by request
+        if type(params['use_external_post_ids'])==list:
+            use_external_post_ids = params['use_external_post_ids'][0]
+        else:
+            use_external_post_ids = params['use_external_post_ids']
+            
+        use_external_post_ids = False if use_external_post_ids.lower()=="false" else True 
+            
+    print("post id:", post_id)    
+    print("use external post ids:", use_external_post_ids)
+
+    if use_external_post_ids:
+        base_post = await Post.find_one(filter={"post_id_external": post_id, "user_id":user_id})
+    else:
+        base_post = await Post.find_one(filter={"_id": ObjectId(post_id), "user_id":user_id})
+
+    print("base post:", base_post)
+
+    base_post_df = post_to_df(base_post)
+    print("base post df:", base_post_df)
+
+
+    posts_cursor = await Post.find(filter={"user_id":user_id}, limit=1000)
+
+    all_posts_df = pd.DataFrame()
+
+    for obj in posts_cursor.objects:
+        df_obj = post_to_df(obj)
+        all_posts_df = all_posts_df.append(df_obj)
+
+    print("base post df:", base_post_df)
+
+    print("all posts df:")
+    print(all_posts_df.head())
+
 
     # post = Post(post_img, post_txt)
-    
-    max_similar = 3 # default 3 similar posts maximum
+    max_similar = 3
 
-    if 'max_similar' in request.args:
-        max_similar = request.args['max_similar']
-    
+    if 'max_similar' in params:
+        if type(params['max_similar'])==list:
+            try:
+                max_similar = int(params['max_similar'][0])
+            except:
+                max_similar=3
+        else:
+            try:
+                max_similar = int(params['max_similar'])
+            except:
+                max_similar=3
+        
     # TODO
     try:
         # result = similarity.get_similar_posts(post, n)
-        result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+        # result = similarity.get_similar_posts(post_img, post_txt, max_similar)
+        # result = similarity.get_similar_posts(post_id, all_posts_df, max_similar)
+        # result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar, use_post_id_external=True)
+        # should be true if not to use local post ids 
+        result = similarity.get_similar_posts(base_post_df, all_posts_df, max_similar, use_post_id_external=use_external_post_ids)
 
-        return response.json(result)
+        if include_posts:
+            post_ids = result["aggregated_similarity"].keys()
+            
+            if use_external_post_ids:
+                filter = {
+                    "post_id_external": {"$in": post_ids},
+                    "user_id": user_id
+                }
+            else:
+                filter = {
+                    "_id": {"$in": [ObjectId(id) for id in post_ids]},
+                    "user_id": user_id
+                }
+            
+            posts_cursor = await Post.find(filter=filter, limit=1000)
+            posts = []    
+
+            for obj in posts_cursor.objects:
+                post = post_to_json(obj)
+                posts.append(post)
+                # posts.append(
+                # {"img_path": obj.img_path,
+                # "id": str(obj.id),
+                # "text": obj.text,
+                # "fields":obj.fields
+                # })
+            
+            return response.json({"status":"success", "results": result["aggregated_similarity"], "posts":posts})
+
+        else:
+            return response.json({"status":"success", "results": result["aggregated_similarity"]})
+        # return response.json({"status":"success", "results": result})
     except Exception as e:
-        # TODO: log somewhere
-        # return abort(500, str(e)) refactored
+    #     # TODO: log somewhere
+    #     # return abort(500, str(e)) refactored
         print("Error: " + str(e))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
