@@ -98,7 +98,7 @@
         
         <div class="col-lg-4 mx-auto text-center">
 
-            <button type="submit" class="btn btn-success ">Get similar posts</button>
+            <button type="submit" class="btn btn-primary ">Get similar posts</button>
 
         </div>
     </div>
@@ -106,7 +106,7 @@
 </form>
 
 
-<div id="results">
+<div id="results" class="row pb-5">
 
 
 <!-- <hr> -->
@@ -157,11 +157,20 @@ function showSimilarPosts(posts, scores_res) {
     console.log("show posts", posts.length);
     for (var i=0; i<posts.length; i++) {
         post_id = posts[i].id;
-        $('#results').append('<img class="img img-responsive img-fluid"  style="width:13%" src="' + posts[i].img_path+'" />');
-        $('#results').append("<b>text:<b>" + posts[i].text +" ;   " );
-        $('#results').append("<b>fields:<b>" + JSON.stringify(posts[i].fields));
-        // $('#results').append('<span>' + image_ids[i] + '</span>');
-        $('#results').append('<span>score: ' + scores_res[post_id] + '</span>');
+
+        var code = '<div class="col-md-4 text-center">' 
+            + '<img class="img img-responsive img-fluid text-center"   style="width:50%" src="' + posts[i].img_path + '"> <br>' 
+            + '<span><b>text:</b>' + posts[i].text +' </span>' 
+            + '<p><b>fields:</b>' + JSON.stringify(posts[i].fields) + '</p>'
+            + '<p><b>score:</b> ' + scores_res[post_id] + '</span>' 
+            + '</div> ';
+        
+            $('#results').append(code);
+        // $('#results').append('<img class="img img-responsive img-fluid"  style="width:13%" src="' + posts[i].img_path+'" />');
+        // $('#results').append("<b>text:<b>" + posts[i].text +" ;   " );
+        // $('#results').append("<b>fields:<b>" + JSON.stringify(posts[i].fields));
+        // // $('#results').append('<span>' + image_ids[i] + '</span>');
+        // $('#results').append('<span>score: ' + scores_res[post_id] + '</span>');
 
     }
 
@@ -225,7 +234,7 @@ $("#imgSimForm").submit(function( event ) {
             console.log("results:", data.results);
             
             // $("#results").html("<p>Succes. Similar posts:</p>" + JSON.stringify(data.results));
-            $("#results").html("<p>Succes. Similar posts:</p>");
+            $("#results").html("<div class=col-md-12><p>Succes. Similar posts:</p></div>");
 
             showSimilarPosts(data.posts, data.results);
 
