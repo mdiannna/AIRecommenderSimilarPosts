@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block styles%}
+<style>
+/*
+*
+* ==========================================
+* CUSTOM UTIL CLASSES
+* ==========================================
+*
+*/
+.upload-input {
+    opacity: 0;
+}
+
+#upload-label, #upload-label2 {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    transform: translateY(-50%);
+}
+
+.image-area {
+    border: 2px dashed rgba(255, 255, 255, 0.7);
+    padding: 1rem;
+    position: relative;
+}
+
+.image-area::before {
+    content: 'Uploaded image result';
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    z-index: 1;
+}
+
+.image-area img {
+    z-index: 2;
+    position: relative;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+
+<h1 class="ui header text-center mb-4">Get similar posts for a post demo</h1>
+<!-- <p>Upload image, write text, click "Post"!</p> -->
+
+
+<form id="imgSimForm" action="/api/get-similar-posts" enctype=multipart/form-data>
+    <div class="row">
+        <div class="col-lg-4 mx-auto text-center">
+            
+            <div class="input-group">
+            <select class="select custom-select" id="selectPost">
+                <option value="" selected>-</option>
+
+            {% for post in demo_posts %}
+                <option value="{{post.id}}">{{post.post_id_external}} : {{post.text[:10]}}</option>
+            {% endfor %}
+            </select>
+        </div>
+
+
+        <div class="image-area mt-4">
+            <img id="postImg" src="#" alt="" class="img-fluid rounded shadow-sm mx-auto d-block">
+        </div>
+
+        <div id="postTxt">
+
+        </div>
+        <div id="postFields">
+
+        </div>
+
+
+
+
+            <!-- {% for post in demo_posts %}
+            <p>id: {{ post.id}}</p>
+            <p>img path: {{post.img_path}}</p>
+            <img src="{{post.img_path}}" class="img-responsive img img-fluid">
+            <p>text: {{post.text}}</p>
+            <p>fields: {{post.fields}}</p>
+            {% endfor %} -->
+
+
+            </div>
+    </div>
+    <div class="row">
+        
+        <div class="col-lg-4 mx-auto text-center">
+
+            <button type="submit" class="btn btn-primary ">Get similar posts</button>
+
+        </div>
+    </div>
+
+</form>
+
+
+<div id="results" class="row pb-5">
+
+
+<!-- <hr> -->
+<!-- <h1 class="ui header">{{ greetings }}</h1> -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+
+$('select').on('change', function() {
+    var selected_post_id = this.value;
+    if (this.value=="") {
+        $("#postImg").attr("src", "#");
+        $("#postTxt").html("Please select post!<br>");
+        $("#postFields").empty();
+    }
+
+    console.log("selected post with id:", selected_post_id);
+    // console.log("{{demo_posts }}".replaceAll("&#39;", '"'));
+    var demo_posts = JSON.parse("{{demo_posts }}".replaceAll("&#39;", '"').replaceAll("None", "{}"));
+
+    // console.log("demo_posts", demo_posts);
+
+    var selected_post = demo_posts.filter(obj => {
+        return obj.id === selected_post_id
+    })[0];
+
+
+    console.log("selected post:", selected_post);
+    console.log("img path:", selected_post.img_path);
+
+    $("#postImg").attr("src", selected_post.img_path);
+    $("#postTxt").html("<p><b>text:</b> " + selected_post.text+ "</p>");
+    console.log("fields:", selected_post.fields);
+    $("#postFields").html("<p><b>fields:</b> " + JSON.stringify(selected_post.fields) + "</p>");
+
+
+
+//   alert( this.value );
+});
+
+
+// TODO
+function showSimilarPosts(posts, scores_res) {
+
+    console.log("show posts", posts.length);
+    for (var i=0; i<posts.length; i++) {
+        post_id = posts[i].id;
+
+        var code = '<div class="col-md-4 text-center">' 
+            + '<img class="img img-responsive img-fluid text-center"   style="width:50%" src="' + posts[i].img_path + '"> <br>' 
+            + '<span><b>text:</b>' + posts[i].text +' </span>' 
+            + '<p><b>fields:</b>' + JSON.stringify(posts[i].fields) + '</p>'
+            + '<p><b>score:</b> ' + scores_res[post_id] + '</span>' 
+            + '</div> ';
+        
+            $('#results').append(code);
+        // $('#results').append('<img class="img img-responsive img-fluid"  style="width:13%" src="' + posts[i].img_path+'" />');
+        // $('#results').append("<b>text:<b>" + posts[i].text +" ;   " );
+        // $('#results').append("<b>fields:<b>" + JSON.stringify(posts[i].fields));
+        // // $('#results').append('<span>' + image_ids[i] + '</span>');
+        // $('#results').append('<span>score: ' + scores_res[post_id] + '</span>');
+
+    }
+
+}
+
+
+
+$("#imgSimForm").submit(function( event ) {
+    // Stop form from submitting normally
+    event.preventDefault();
+    
+    console.log("submit form!");
+    
+    var selected_post_id = $('#selectPost').val();
+    console.log("selected post id:", selected_post_id);
+    // alert(selected_post_id);
+    // return;
+    
+    
+    // Get some values from elements on the page:
+    var $form = $( this );
+    // var text = $form.find( "textarea[name='post_text']" ).val();
+    // var img_path1= infoArea.textContent;
+
+    var url = $form.attr( "action" );
+
+
+    var formData = new FormData();
+
+    // // add assoc key values, this will be posts values
+    // formData.append("image", input.files[0], input.files[0].name);
+
+    formData.append("post_id", selected_post_id);
+    formData.append("use_external_post_ids", false);
+    formData.append("include_posts", true);
+
+    // data ={"token": "test-demo", "text": text};
+    // var formData = data;
+    // var posting = $.post( url, formData, contentType=false, processData=false );
+
+    $("#results").html("Loading... wait please");
+
+    var token = "{{token}}";    
+    // console.log(token);
+
+    $.ajaxSetup({
+        headers: {
+            'Authorization' : "Bearer {{token}}"
+        }
+    });
+
+
+        
+    $.ajax({
+        type: "POST",
+        url: url,
+        success: function (data) {
+            $("#results").html("***succes - " + data + "\n similarity_score:", data.similarity_score);
+
+            console.log("succes:", data);
+            console.log("results:", data.results);
+            
+            // $("#results").html("<p>Succes. Similar posts:</p>" + JSON.stringify(data.results));
+            $("#results").html("<div class=col-md-12><p>Succes. Similar posts:</p></div>");
+
+            showSimilarPosts(data.posts, data.results);
+
+        },
+        error: function (xhr, status, error) {
+            var err = eval("(" + xhr.responseText + ")");
+            // alert("Error. " + err.message);
+            $("#results").html("***error: "+error + ". <br>Message: " +  err.message);
+            console.log("error:", error);
+
+        },
+        async: true,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        // timeout: 60000
+    });
+
+   
+});
+
+</script>
+{% endblock %}
