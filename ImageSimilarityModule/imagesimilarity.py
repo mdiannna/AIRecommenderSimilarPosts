@@ -53,8 +53,8 @@ class ImageSimilarity:
         Calculate similarity score between the features of 2 images already extracted
             Parameters:
             ----------
-                img1_features (str) - features extracted from img1
-                img2_features (str) - features extracted from img2
+                img1_features (np array) - features extracted from img1
+                img2_features (np array) - features extracted from img2
             Returns:
             ----------
                 score (float) - the similarity score (TODO: decide unit - percentages or other - standardizat cumva ???)
