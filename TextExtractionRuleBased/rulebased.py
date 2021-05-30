@@ -23,6 +23,29 @@ class RuleBasedInformationExtractor():
         self.__fields_to_extract = fields_to_extract
         self.__language = language
 
+    def remove_ro_diacritics(self, text):
+        """ Remove romanian diacritics from text 
+        Parameters:
+        -----------
+            text(str) - the text from which to remove diacritics
+        Returns:
+        -----------
+            new_text(str) - the text with replaced diacritics
+        """
+        diacritics_map = {
+            'ş': 's',
+            'ţ': 't',
+            'ă': 'a',
+            'î': 'i',
+            'â': 'a',
+        }
+        new_text = text
+
+        for char_to_replace, replacement in diacritics_map.items():
+            new_text = new_text.replace(char_to_replace, replacement)
+
+        return new_text
+
 
     def extract_fields(self, text, return_standardized=False):
         """
@@ -74,7 +97,10 @@ class RuleBasedInformationExtractor():
         f = open(options_folder + options_filename)
         options = f.readlines()
 
-        options = [x.lower().replace('\n', '').strip() for x in options]
+        options = [opt.lower().replace('\n', '').strip() for opt in options]
+
+        # extend list of options with same options without romanian diacritics
+        options.extend([self.remove_ro_diacritics(opt) for opt in options])
 
         # TODO: test if ok options_extended
         options_extended = options

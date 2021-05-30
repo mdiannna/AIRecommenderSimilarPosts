@@ -1,5 +1,8 @@
+from os import replace
 from TextExtractionRuleBased.rulebased import RuleBasedInformationExtractor
 import pandas as pd
+from nltk.stem import SnowballStemmer
+import nltk
 
 class TextModule:
     # TODO: config_path should be not default param
@@ -7,8 +10,126 @@ class TextModule:
         # TODO: check the sum of weights to be 1
         self.set_weights(weight_NER, weight_RB)
         self.__config_path = config_path
+        self.__stemmer = SnowballStemmer("romanian")
+        
+
+    def stem_text(self, text, verbose=False):
+        """ apply Romanian stemmer to get the root of words & return new text with only word roots
+        """
+        resulted_text = ""
+        tokens = nltk.word_tokenize(text)
+        
+        for idx, token in enumerate(tokens):
+            stem = self.__stemmer.stem(token)
+            if idx>0:
+                resulted_text+=" "
+            resulted_text += stem
+
+            if verbose:
+                print(token, "=>", stem)
+        return resulted_text
+    
+
+    def stem_fields(self, fields, verbose=False):
+        """ apply Romanian stemmer to get the root of fields & return stemmed fields """
+
+        resulted_fields = []
+        
+        for field in fields:
+            field_name, field_text = list(field.keys())[0], list(field.values())[0]
+            stem = self.__stemmer.stem(field_text)
+            resulted_fields.append({field_name:stem})
+            if verbose:
+                print(field_text, "=>", stem)
+
+        return resulted_fields
+        
+
+    def remove_ro_diacritics(self, text):
+        """ Remove romanian diacritics from text 
+        Parameters:
+        -----------
+            text(str) - the text from which to remove diacritics
+        Returns:
+        -----------
+            new_text(str) - the text with replaced diacritics
+        """
+        diacritics_map = {
+            'ş': 's',
+            'ţ': 't',
+            'ă': 'a',
+            'î': 'i',
+            'â': 'a',
+        }
+        new_text = text
+
+        for char_to_replace, replacement in diacritics_map.items():
+            new_text = new_text.replace(char_to_replace, replacement)
+
+        return new_text
+
+    def remove_ro_diacritics_fields(self, fields):
+        """ remove romanian diacritics from extracted fields """
+        diacritics_map = {
+            'ş': 's',
+            'ţ': 't',
+            'ă': 'a',
+            'î': 'i',
+            'â': 'a',
+        }
+
+        resulted_fields = []
+        
+        for field in fields:
+            field_name, field_text = list(field.keys())[0], list(field.values())[0] 
+            new_field_text = field_text
+
+            for char_to_replace, replacement in diacritics_map.items():
+                new_field_text = new_field_text.replace(char_to_replace, replacement)
+            resulted_fields.append({field_name:new_field_text})
+
+        return resulted_fields
 
 
+    def preprocess_text(self, text):
+        """ 
+        Preprocess text before applyong similarity metric.
+        Stem then remove diacritics for fields (having texts in Romanian) 
+        """
+        resulted_text = self.stem_text(text)
+        resulted_text = self.remove_ro_diacritics(resulted_text)
+
+        return resulted_text
+
+
+    def preprocess_fields(self, fields, verbose=False):
+        """ Stem then remove diacritics for fields (having texts in Romanian) """
+        resulted_fields = []
+
+        diacritics_map = {
+            'ş': 's',
+            'ţ': 't',
+            'ă': 'a',
+            'î': 'i',
+            'â': 'a',
+        }
+        
+        for field in fields:
+            field_name, field_text = list(field.keys())[0], list(field.values())[0]
+            new_field_text = field_text
+
+            for char_to_replace, replacement in diacritics_map.items():
+                new_field_text = new_field_text.replace(char_to_replace, replacement)
+
+            stem = self.__stemmer.stem(new_field_text)
+                
+            resulted_fields.append({field_name:stem})
+
+            if verbose:
+                print(field_text, "=>", new_field_text)
+
+        return resulted_fields
+    
 
 
     def calc_similarity(self, text1, text2):
@@ -34,13 +155,16 @@ class TextModule:
         entities1 = extracted_fields1[0]
         entities2 = extracted_fields2[0]
 
+        entities1_processed = self.preprocess_fields(entities1, verbose=True)
+        entities2_processed = self.preprocess_fields(entities2, verbose=True)
+
         intersect_cnt = 0
 
-        for entity in entities1:
-            if entity in entities2:
+        for entity in entities1_processed:
+            if entity in entities2_processed:
                 intersect_cnt += 1
 
-        union_cnt = len(entities1) + len(entities2) - intersect_cnt
+        union_cnt = len(entities1_processed) + len(entities2_processed) - intersect_cnt
         
         if union_cnt>0:
             jaccard_score = intersect_cnt / union_cnt
@@ -56,11 +180,14 @@ class TextModule:
         """    
         intersect_cnt = 0
 
-        for entity in fields1:
-            if entity in fields2:
+        fields1_processed = self.preprocess_fields(fields1, verbose=True)
+        fields2_processed = self.preprocess_fields(fields2, verbose=True)
+
+        for entity in fields1_processed:
+            if entity in fields2_processed:
                 intersect_cnt += 1
 
-        union_cnt = len(fields1) + len(fields2) - intersect_cnt
+        union_cnt = len(fields1_processed) + len(fields2_processed) - intersect_cnt
         
         if union_cnt>0:
             jaccard_score = intersect_cnt / union_cnt
@@ -185,7 +312,7 @@ if __name__=="__main__":
     text2 = """S-a perdut in com.Tohatin, caine de rasa ,, beagle ,,,  pe nume ,,KAY,, """
     # text2 = "cainele de rasa beagle s-a pierdut"
     text3 = "caine de rasa siameza s-a pierdut"
-    text4 = "caine de rasa buldog s-a pierdut"
+    text4 = "câine de rasa buldog s-a pierdut"
 
     fields1 = tm.extract_fields(text1)[0]
     fields2 = tm.extract_fields(text2)[0]
@@ -203,4 +330,20 @@ if __name__=="__main__":
 
     
 
+    ############# Test text preprocessing:
+    
+    text7 = "S-a perdut în com.Tohatin, câine de rasă ,, beagle ,,,  pe nume ,,KAY,,"
+    fields7 = tm.extract_fields(text7)[0]
+    print("fields7:", fields7)
 
+    print("Remove diacritics in text:", tm.remove_ro_diacritics(text7))
+    print("Stem text:", tm.stem_text(text7))
+    print("Full preprocess text:", tm.preprocess_text(text7))
+
+    print()
+
+    print("Stem fields:", tm.stem_fields(fields7))
+    print("Remove diaicritics fields:", tm.remove_ro_diacritics_fields(fields7))
+    print("Preprocess text from fields:", tm.preprocess_fields(fields7))
+    print("fields7 changed?", fields7)
+    
