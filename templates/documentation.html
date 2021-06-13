@@ -2,13 +2,120 @@
 
 {% block title %}SimilarityRecommender Home{% endblock %}
 
+
+{% block styles %}
+<style>
+    td{ 
+        font-size: small;
+    }
+</style>
+
+{% endblock %}
+
 {% block body %}
 
-<div class="text-center mx-auto my-auto container-fluid mt-5 mb-5 ">
+<div class="text-center mx-auto my-auto container-fluid mt-5 mb-5 pb-5 ">
     <h1 class="ui header ">SimilarityRecommender</h1>
-    <h2 class="pb-3">Documentation</h2>
+    <h2 class="pb-3">Documentation - API specifications</h2>
     
-    <p>In progress...</p>
+
+    <!-- <div> -->
+        <!-- <h2></h2> -->
+        <table class="table ">
+            <thead>
+              <tr>
+                <th scope="col">Endpoint</th>
+                <th scope="col">Method</th>
+                <th scope="col">Parameters</th>
+                <th scope="col">Returns</th>
+                <th scope="col">Description</th>
+                <th scope="col">Example request with curl</th>
+              </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>/api/auth</td>
+                    <td>POST</td>
+                    <td class="text-left">{"user":string, "password":string}</td>
+                    <td class="text-left">{"access_token":string}</td>
+                    <td>login to the api & receive the authentication token</td>
+                    <td>curl -iv -H "Content-Type: application/json" -d '{"username": "diana", "password": "mypassword"}' http://localhost:5005/api/auth</td>
+                </tr>
+                <tr>
+                    <td>/api/text-extract</td>
+                    <td>POST</td>
+                    <td class="text-left">{"text":string}</td>
+                    <td class="text-left">{"status":string (success/error), "fields": [{"field1":val1}, {"field2":val2}]}</td>
+                    <td>extract fields from text</td>
+                    <td>curl -iv -H "Authorization: Bearer &#60;token&#62;" -d '{"text": "caine beagle si pisica de rasa siameza"}' http://localhost:5005/api/text-extract</td>
+                </tr>
+                <tr>
+                    <td>/api/image-pairs-similarity</td>
+                    <td>POST</td>
+                    <td class="text-left">{img1:file, img2:file}</td>
+                    <td class="text-left">{"status": string (s/err), "similarity_score": float}</td>
+                    <td>get similarity score between a pair of images (2 images)</td>
+                    <td>curl -iv -H "Authorization: Bearer &#60;token&#62;" -F 'upload_file=true' -F 'img1=@images/60a0e05cdceb7d8619fd6958/same_catt1.jpg' -F 'img2=@images/60a0e05cdceb7d8619fd6958/same_catt2.jpg'  http://localhost:5005/api/image-pairs-similarity</td>
+                </tr>
+                <tr>
+                    <td>/api/get-similar-images</td>
+                    <td>POST</td>
+                    <td class="text-left">{"image": file, "image_link": string, "limit_imgs":int, include_paths[opt]:boolean}</td>
+                    <td class="text-left">{"status": string(s/err), "results": {"img_id":similarity_score}, "imag_paths_map" : {"img_id":"img_path"}</td>
+                    <td>get the most similar images from database for the image in the request and the similarity scores</td>
+                    <td>curl -iv -H "Authorization: Bearer &#60;token&#62;" -F 'upload_file=true' -F 'image=@images/60a0e05cdceb7d8619fd6958/same_catt1.jpg'  http://localhost:5005/api/get-similar-images</td>
+                </tr>
+                <tr>
+                    <td>/api/post-pairs-similarity</td>
+                    <td>POST</td>
+                    <td class="text-left">{img1:file, text1:string, img2:file, text2:string}</td>
+                    <td class="text-left">{"status": string (s/err), "similarity_score": "x%"}</td>
+                    <td>get similarity score between a pair of posts (2 posts)</td>
+                    <td>curl -iv -H "Authorization: Bearer &#60;token&#62;" -F 'upload_file=true' -F 'img1=@images/60a0e05cdceb7d8619fd6958/same_catt1.jpg' -F 'img2=@images/60a0e05cdceb7d8619fd6958/same_catt2.jpg'  -F 'text1=S-a pierdut pisica de rasa siameza' -F 'text2=Am gasit o pisica in Chisinau de culoare alba' http://localhost:5005/api/post-pairs-similarity</td>
+                </tr>
+                <tr>
+                    <td>/api/get-similar-posts</td>
+                    <td>POST</td>
+                    <td class="text-left">{post_id: string, limit_posts:5}</td>
+                    <td class="text-left">{"status": string(s/err), "results": {"post_id1" :similarity_score1, string:float}}</td>
+                    <td>get the most similar posts database for the post in the request and the similarity scores</td>
+                    <td>curl POST -iv  -H "Content-Type: application/json"  -H "Authorization: Bearer &#60;token&#62;"  -d '{"post_id": "1"}'  http://localhost:5005/api/get-similar-posts</td>
+                </tr>
+                <tr>
+                    <td>/api/post/create</td>
+                    <td>POST</td>
+                    <td class="text-left">{post_id: string, image:file, text:string, image_link:string, fields: []}</td>
+                    <td class="text-left">{"status":string (success/error), "error":string [optional]}</td>
+                    <td>create a new post in the database</td>
+                    <td>curl -iv -H "Authorization: Bearer &#60;token&#62;" -F "post_id=370" -F "text=bfgnfnf" -F "image=@images/60980229f722aec997be90fa/same_cat6.jpg" http://localhost:5005/api/post/create</td>
+                </tr>
+                <tr>
+                    <td>/api/post/read</td>
+                    <td>GET</td>
+                    <td class="text-left">{post_id: string}</td>
+                    <td class="text-left">{"status":string (success/error), "error":string [optional], "post": {
+                        "post_id":string, "text":string, "img_path": string, "img_features": str(json), "fields": dict }}"</td>
+                    <td>read the post with the specified post_id from the database</td>
+                    <td>curl -X GET -iv  -H "Content-Type: application/json"  -H "Authorization: Bearer &#60;token&#62;"  -d '{"post_id": "1"}'  http://localhost:5005/api/post/read</td>
+                </tr>
+                <tr>
+                    <td>/api/post/update</td>
+                    <td>POST</td>
+                    <td class="text-left">{post_id: string, image:file, image_link:string, text:string, fields: ["field1":string] [optional] }</td>
+                    <td class="text-left">{"status":string (success/error), "error":string [optional]}</td>
+                    <td>update the post with the specified post_id from the database</td>
+                    <td>curl -X POST  -H "Content-Type: application/json"      -H "Authorization: Bearer &#60;token&#62;" -d '{"text":"S-a perdut in com.Tohatin, caine de rasa ,,BEAGLE,,, mascul pe nume ,,KAY,,Va rugam frumos sa ne anuntati daca stiti ceva informatie despre prietenul familie", "post_id":1}' http://0.0.0.0:5005/api/post/update</td>
+                </tr>
+                <tr>
+                    <td>/api/post/delete</td>
+                    <td>POST</td>
+                    <td class="text-left">{post_id: string}</td>
+                    <td class="text-left">{"status":string (success/error), "error":string [optional]}</td>
+                    <td>delete the post with the specified post_id from the database</td>
+                    <td>curl -X POST -iv  -H "Content-Type: application/json"  -H "Authorization: Bearer &#60;token&#62;"  -d '{"post_id": ["b4e23c3c-53d9-4e5c-995a-85c52b687561"]}'  http://localhost:5005/api/post/delete</td>
+                </tr>
+            </tbody>
+    <!-- </div> -->
 </div>
 
 {% endblock %}
