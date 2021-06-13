@@ -217,6 +217,7 @@ class TextModule:
 
         print("base fields:", base_fields)
 
+
         for compare_fields in all_fields:
             print("fields;", compare_fields)
             # for compare_fields2 in all_fields:

@@ -1,7 +1,10 @@
+from numpy.core.function_base import logspace
+from tensorflow.python.training.tracking import base
 from post import Post
 from termcolor import colored
 from text_module import TextModule
 from ImageSimilarityModule.imagesimilarity import ImageSimilarity
+import json
 
 class SimilarityAggregator():
     # TODO: add text config_path param to be used in text module when using this class
@@ -111,11 +114,31 @@ class SimilarityAggregator():
         print(other_posts_df.head())
         print("columns:", other_posts_df.columns)
 
-        print("post df cols: ", post_df.columns )
+        # print("post df cols: ", post_df.columns )
         base_fields = post_df['fields'].to_numpy().flatten()[0]
-        print(" *base fields:", base_fields)
+        # print(" *base fields:", base_fields)
         print("**")
-        print(post_df['fields'])
+
+        if len(base_fields)>0 and type(base_fields[0])==str:
+            base_fields = [json.loads(base_fields[0])]
+            print("&& base fields:", base_fields)
+            fields_dict = base_fields[0]
+            base_fields_new = []
+
+            for field_name, field in fields_dict.items():
+                if type(field)==list:
+                    base_fields_new.append({field_name:field[0]})
+                elif type(field)==str:
+                    base_fields_new.append({field_name:field})
+                # else: TODO handle somehow
+            
+            base_fields = base_fields_new
+
+        print("!!&& base fields:", base_fields)
+
+
+
+        # print(post_df['fields'])
 
         # base_img_features = post_df['img_features'].to_numpy().flatten()[0]
         base_img_features = post_df['img_features'].to_list()[0]

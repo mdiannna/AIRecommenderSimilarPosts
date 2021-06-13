@@ -347,6 +347,21 @@ async def make_post(request, user):
         print("fields:", request.form["fields"])
         fields_external = request.form['fields']
 
+        if type(fields_external)==list and len(fields_external)>0 and type(fields_external[0])==str:
+            fields_external = [json.loads(fields_external[0])]
+            print("&&external fields:", fields_external)
+            fields_dict = fields_external[0]
+            base_fields_new = []
+
+            for field_name, field in fields_dict.items():
+                if type(field)==list:
+                    base_fields_new.append({field_name:str(field[0])})
+                elif type(field)==str:
+                    base_fields_new.append({field_name:field})
+                # else: TODO handle somehow
+            
+            fields_external = base_fields_new
+
     #upload image    
     if ('image' not in request.files) and ('image_link' not in request.form):
         print({"status":"error", "message":"no files for image"})
@@ -533,9 +548,24 @@ async def edit_post(request, user):
         
         # TODO: test!!!
         if 'fields' in params:
-            new_fields = params['fields']
+            fields_external = params['fields']
+
+            if type(fields_external)==list and len(fields_external)>0 and type(fields_external[0])==str:
+                fields_external = [json.loads(fields_external[0])]
+                print("&&external fields:", fields_external)
+                fields_dict = fields_external[0]
+                base_fields_new = []
+
+                for field_name, field in fields_dict.items():
+                    if type(field)==list:
+                        base_fields_new.append({field_name:str(field[0])})
+                    elif type(field)==str:
+                        base_fields_new.append({field_name:field})
+                    # else: TODO handle somehow
+            
+            fields_external = base_fields_new
             await Post.update_one(filter={'post_id_external':post_id, 'user_id':user_id}, 
-                update={"$set": {'fields': new_fields}}, upsert=True)
+                update={"$set": {'fields': fields_external}}, upsert=True)
 
         return response.json({"status":"success", "message": "post succesfully updated"})
 
@@ -581,7 +611,7 @@ async def read_post(request, user):
         return response.json({"status":"error", "message": "post with id '" + post_id + "' not found in the database"}, status=404)
     except Exception as e:
         # TODO: log somewhere
-        print("Error: " + str(e))
+        print(colored("Error: " + str(e), "red"))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
 
@@ -633,7 +663,7 @@ async def delete_post(request, user):
         return response.json({"status":"error", "message": "post with id '" + post_id + "' not found in the database"}, status=404)
     except Exception as e:
         # TODO: log somewhere
-        print("Error: " + str(e))
+        print(colored("Error: " + str(e), "red"))
         return response.json({"status":"error", "message":str(e)}, status=500)
           
 
@@ -780,7 +810,7 @@ async def get_similar_posts(request, user):
     else:
         base_post = await Post.find_one(filter={"_id": ObjectId(post_id), "user_id":user_id})
 
-    print("base post:", base_post)
+    # print("base post:", base_post)
 
     base_post_df = post_to_df(base_post)
     print("base post df:", base_post_df)
@@ -794,10 +824,13 @@ async def get_similar_posts(request, user):
         df_obj = post_to_df(obj)
         all_posts_df = all_posts_df.append(df_obj)
 
+    all_posts_df['fields'] = all_posts_df.apply(lambda x: x['fields'] if x['fields']!=[] else x['fields_external'], axis=1)
+    print("fields:", all_posts_df['fields'])
     print("base post df:", base_post_df)
 
     print("all posts df:")
     print(all_posts_df.head())
+
 
 
     # post = Post(post_img, post_txt)
@@ -859,7 +892,7 @@ async def get_similar_posts(request, user):
     except Exception as e:
     #     # TODO: log somewhere
     #     # return abort(500, str(e)) refactored
-        print("Error: " + str(e))
+        print(colored("Error: " + str(e), "red"))
         return response.json({"status":"error", "message":str(e)}, status=500)
         
 
@@ -905,7 +938,8 @@ async def simple_text_extract(request):
         if result[1]=="success":
             return response.json({"status":"success", "fields": result[0], "message":""})
         else:
-            print("Error: " + str(result))
+            print(colored("Error: " + str(result), "red"))
+
             return response.json({"status":"error", "message":"Errors in Config file for Rule-Based Text Extractor!", "fields": []}, status=500)
     except Exception as e:
         print("Error: " + str(e))

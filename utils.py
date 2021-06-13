@@ -78,8 +78,8 @@ def post_to_df(post_item)   :
         'img_features': post_item.img_features
     }
 
-    print("data:", data)
-    print("cols:", list(data.keys()))
+    # print("data:", data)
+    print("data cols:", list(data.keys()))
 
 
     # df = pd.DataFrame.from_records([data], columns=list(data.keys()), index=[str(post_item.id)])
