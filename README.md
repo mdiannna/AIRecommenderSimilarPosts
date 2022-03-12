@@ -1,7 +1,7 @@
 # AIRecommenderSimilarPosts
 
 ## Description
-This project proposes a solution based on Artificial Intelligence algorithms to the problem of finding posts that contain images and text about lost or found pets which are similar in a time efficient way. The system does so by aggregating the similarity scores of the posts computed based on features extracted from images and texts. 
+This project proposes a solution based on Artificial Intelligence (including ML) algorithms to the problem of finding posts that contain images and text about lost or found pets which are similar in a time efficient way. The system does so by aggregating the similarity scores of the posts computed based on features extracted from images and texts. 
 
 Although initially it was thought to use the system for finding similar posts of lost and found pets, the system can also be applied to other types of posts to detect their similarity and also recommend the top most similar posts.
 
