@@ -47,9 +47,9 @@ For now, the system was implemented and tested to work with Romanian texts, but 
 <!-- ![screenshot4](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen4.png) -->
 
 ## How to run
-``` $pip3 install -r requirements.txt ```
+1. ``` $ pip3 install -r requirements.txt ```
 
-``` python3 app.py ```
+2. ``` $ python3 app.py ```
 
 ## Technical details / how to run (in progress):
 To start mongo:
