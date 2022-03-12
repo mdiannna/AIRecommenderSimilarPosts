@@ -32,6 +32,20 @@ For now, the system was implemented and tested to work with Romanian texts, but 
 - HTML, CSS, Bootstrap
 - and others
 
+## Screenshots
+
+| | | 
+|:-------------------------:|:-------------------------:
+|<img width="1604" alt="screen shot 1" src="https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen1.png">  blah |  <img width="1604" alt="screen shot 2" src="https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen2.png">|
+|<img width="1604" alt="screen shot 3" src="https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen3.png"> |  <img width="1604" alt="screen shot 4" src="https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen4.png">|
+
+
+<!-- commented: -->
+<!-- [screenshot1](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen1.png) -->
+<!--![screenshot2](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen2.png) -->
+<!--![screenshot3](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen3.png) -->
+<!-- ![screenshot4](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/screen4.png) -->
+
 ## How to run
 ``` $pip3 install -r requirements.txt ```
 
