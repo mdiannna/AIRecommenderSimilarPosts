@@ -10,3 +10,6 @@ venv/
 __pycache__/
 *.py[cod]
 *$py.class
+
+images/
+example_texts.txt
