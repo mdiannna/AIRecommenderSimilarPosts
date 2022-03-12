@@ -5,7 +5,7 @@ This project proposes a solution based on Artificial Intelligence (including ML)
 
 Although initially it was thought to use the system for finding similar posts of lost and found pets, the system can also be applied to other types of posts to detect their similarity and also recommend the top most similar posts.
 
-For the ease of use, the system was embedded in a web platform which provides an API.
+For the ease of use, the system was embedded in a web platform which provides an API for external use.
 
 For now, the system was implemented and tested to work with Romanian texts, but in the future it is planned to extend the system to other languages as well.
 
