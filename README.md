@@ -23,7 +23,14 @@ For now, the system was implemented and tested to work with Romanian texts, but 
 
 ## Technologies used
 - Python
-- 
+- Keras
+- Scikit-learn
+- Pandas
+- Nltk
+- Sanic Web Framework
+- Motor Driver for Mongo
+- HTML, CSS, Bootstrap
+- and others
 
 ## How to run
 ``` $pip3 install -r requirements.txt ```
