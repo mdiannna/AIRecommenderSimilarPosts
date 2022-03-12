@@ -10,13 +10,16 @@ For the ease of use, the system was embedded in a web platform which provides an
 For now, the system was implemented and tested to work with Romanian texts, but in the future it is planned to extend the system to other languages as well.
 
 ## Image similarity
-- TODO
+![image similarity schema1](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/1image_schema1.png)
+
+![image similarity schema2](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/2image_schema2.png)
 
 ## Text similarity
-- TODO
+
+ ![text similarity schema](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/3text_schema3.png)
  
 ## Aggregated image+text posts similarity
-- TODO
+![aggregated similarity schema](https://github.com/mdiannna/AIRecommenderSimilarPosts/blob/main/schemas_and_screenshots/4aggregated_schema.png)
 
 ## Technical details / how to run (in progress):
 To start mongo:
